@@ -15,6 +15,7 @@ class Stats:
             current_ema = (c * value) + ((1 - c) * current_ema)
         return current_ema
 
+"""Data class to calculate stats from basic input data"""
 class TimeIntervalData:
     def __init__(self, price_data, ema_num_hours, offset: int = 0):
         if offset > 0:
@@ -23,11 +24,16 @@ class TimeIntervalData:
         cur_price = price_data[0]
         ema = Stats.ema(price_data[::-1], ema_num_hours)
 
-        diff = abs(cur_price - ema)
-        percent_diff = diff / ema
+        diff = cur_price - ema
+        percent_diff = abs(diff) / ema
         percent_diff *= 100
 
         # Set local variables to self variables
         self.cur_price = cur_price
         self.ema = ema
         self.ema_percent_diff = percent_diff
+        self.diff = diff
+        self.diff_positive = diff > 0
+
+    def formatted_info(self):
+        return f"{self.cur_price:.0f}/{self.ema:.0f} - {self.ema_percent_diff:.1f}%"

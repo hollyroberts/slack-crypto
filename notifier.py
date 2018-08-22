@@ -1,4 +1,6 @@
 import requests
+import sys
+
 from datetime import datetime, timedelta
 from stats import TimeIntervalData
 from coinbase import Coinbase
@@ -6,8 +8,8 @@ from coinbase import Coinbase
 # Configurable Constants
 PRIMARY_CURRENCY = "BTC"
 SECONDARY_CURRENCY = "USD"
-EMA_THRESHOLD_PERCENT = 2.5
-EMA_NUM_HOURS = 12
+EMA_THRESHOLD_PERCENT = 2
+EMA_NUM_HOURS = 18
 HOURS_BETWEEN_POSTS = 6
 
 # 'Hard' Constants
@@ -25,8 +27,47 @@ params = {
 
 # Get data and convert accordingly
 historical_data = requests.get(f"{API_URL}/products/{CURRENCY_PAIR}/candles", params=params).text
-prices = Coinbase(historical_data).price_list()
+cb = Coinbase(historical_data)
+cur_price = cb.latest_price()
+prices = cb.price_list()
 
 stats = TimeIntervalData(prices, EMA_NUM_HOURS)
 if stats.ema_percent_diff < EMA_THRESHOLD_PERCENT:
-    print(f"Current price not outside threshold ({stats.cur_price:.0f}/{stats.ema:.0f} - {stats.ema_percent_diff:.1f}%)")
+    print(f"Current price not outside threshold ({stats.formatted_info()})")
+    sys.exit(1)
+else:
+    print(f"Current price increased above threshold difference ({stats.formatted_info()})")
+
+# Check the last X hours
+last_msg_price = None
+
+for offset in range(1, HOURS_BETWEEN_POSTS + 1):
+    offset_data = TimeIntervalData(prices, EMA_NUM_HOURS, offset)
+
+    if offset_data.ema_percent_diff < EMA_THRESHOLD_PERCENT:
+        continue
+
+    print(f"Data from {offset} hours ago is also above the threshold difference {offset_data.formatted_info()})")
+
+    # If magnitude is opposite then include anyway
+    if offset_data.diff_positive != stats.diff_positive:
+        print(f"Last increase was the opposite sign ({stats.diff:+.0f}/{offset_data.diff:+.0f})")
+        break
+
+    # Allow if increase is greater again
+    if offset_data.diff_positive:
+        required_perc_diff = (1 + EMA_THRESHOLD_PERCENT / 100)
+        sign_str = "above"
+    else:
+        required_perc_diff = (1 - EMA_THRESHOLD_PERCENT / 100)
+        sign_str = "below"
+
+    new_threshold = offset_data.cur_price * required_perc_diff
+    print(f"To repost within the cooldown period the current price must be {sign_str}: {new_threshold:.0f}")
+    if (offset_data.diff_positive and stats.cur_price > new_threshold) or \
+            (not offset_data.diff_positive and stats.cur_price < new_threshold):
+        print(f"Beats new threshold price ({stats.cur_price:.0f}/{new_threshold:.0f})")
+        break
+
+    print(f"Does not beat new threshold price: ({stats.cur_price:.0f}/{new_threshold:.0f})")
+    sys.exit(1)
