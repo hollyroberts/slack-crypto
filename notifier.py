@@ -6,8 +6,7 @@ from coinbase import Coinbase
 # Configurable Constants
 PRIMARY_CURRENCY = "BTC"
 SECONDARY_CURRENCY = "USD"
-NUM_HOURS = 12
-
+EMA_NUM_HOURS = 12
 
 # 'Hard' Constants
 API_URL = "https://api.pro.coinbase.com"
@@ -22,7 +21,11 @@ params = {
     "granularity": 3600
 }
 
-# Get data and format into data structure
+# Get data and convert accordingly
 historical_data = requests.get(f"{API_URL}/products/{CURRENCY_PAIR}/candles", params=params).text
 cb = Coinbase(historical_data)
-cb.print_historical_prices()
+prices = cb.price_list()
+ema = Stats.ema(prices[::-1], EMA_NUM_HOURS)
+
+print(f"{EMA_NUM_HOURS} Hour EMA: {ema}")
+print(f"Current price: {cb.latest_price()}")

@@ -22,7 +22,18 @@ class Coinbase():
             time_diff = self.data[i]['time'] - self.data[i + 1]['time']
             assert time_diff == 3600
 
-    # Debug method
+    def latest_price(self):
+        return self.data[0]['open']
+
+    """Return a list of the last prices in reverse order (using open)"""
+    def price_list(self):
+        prices = []
+        for entry in self.data:
+            prices.append(entry['open'])
+
+        return prices
+
+    """Debug method to print datetime and price"""
     def print_historical_prices(self):
         for entry in self.data:
             time_formatted = datetime.fromtimestamp(entry['time']).strftime("[%d/%m/%Y] %H:%M:%S")
