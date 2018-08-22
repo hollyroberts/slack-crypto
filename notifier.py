@@ -15,12 +15,13 @@ EMA_THRESHOLD_PERCENT = 1
 EMA_NUM_HOURS = 18
 HOURS_BETWEEN_POSTS = 6
 
-COLOUR_THRESHOLD_GOOD = 3
-COLOUR_THRESHOLD_NEUTRAL = -1.5
-COLOUR_THRESHOLD_WARNING = -5
+COLOUR_THRESHOLD_GOOD = 1.5
+COLOUR_THRESHOLD_NEUTRAL = -1
+COLOUR_THRESHOLD_WARNING = -3
 
 PRICE_UP_IMAGE = "https://i.imgur.com/2PVZ0l1.png"
 PRICE_DOWN_IMAGE = "https://i.imgur.com/21sDn3D.png"
+SLACK_CHANNEL = "#crypto"
 
 # 'Hard' Constants
 API_URL = "https://api.pro.coinbase.com"
@@ -89,8 +90,8 @@ stats_1_hour = TimeIntervalData(prices, EMA_NUM_HOURS, 1)
 stats_24_hour = TimeIntervalData(prices, EMA_NUM_HOURS, 24)
 stats_7_day = TimeIntervalData(prices, EMA_NUM_HOURS, 24 * 7)
 
-def format_stat(stat: TimeIntervalData, text_pretext: str, pretext = None):
-    diff = abs(stats.cur_price - stat.cur_price)
+def format_stat(stat: TimeIntervalData, text_pretext: str, pretext=None):
+    diff = stats.cur_price - stat.cur_price
     diff /= stat.cur_price
     diff *= 100
 
@@ -106,20 +107,20 @@ def format_stat(stat: TimeIntervalData, text_pretext: str, pretext = None):
     text = f"{text_pretext}{SECONDARY_CURRENCY_SYMBOL}{stat.cur_price:,.0f} ({diff:+.2f}%)"
     attachment = {"fallback": "some price changes", "text": text, "color": colour}
     if pretext is not None:
-        attachment['pretext']: pretext
+        attachment['pretext'] = pretext
 
     return attachment
 
-sign_str = "down" if stats.diff_positive else "up"
-attachment_pretext = f"{PRIMARY_CURRENCY_LONG}'s has gone {sign_str}. Current price: {SECONDARY_CURRENCY_SYMBOL}{stats.cur_price:,.0f}"
+sign_str = "up" if stats.diff_positive else "down"
+attachment_pretext = f"{PRIMARY_CURRENCY_LONG}'s price has gone {sign_str}. Current price: {SECONDARY_CURRENCY_SYMBOL}{stats.cur_price:,.0f}"
 
 # noinspection PyListCreation
 attachments = []
-attachments.append(format_stat(stats_1_hour, "Price 1 hour ago:     ", attachment_pretext))
-attachments.append(format_stat(stats_24_hour, "Price 24 hours ago:     "))
-attachments.append(format_stat(stats_7_day, "Price 7 days ago:     "))
+attachments.append(format_stat(stats_1_hour, "Price 1 hour ago:      ", attachment_pretext))
+attachments.append(format_stat(stats_24_hour, "Price 24 hours ago:  "))
+attachments.append(format_stat(stats_7_day, "Price 7 days ago:      "))
 
 image_url = PRICE_UP_IMAGE if stats.diff_positive else PRICE_DOWN_IMAGE
 print("Posting to slack")
-Slack.post_to_slack("Cryptocorn", image_url, "", attachments, SLACK_URL)
+Slack.post_to_slack("Cryptocorn", image_url, "", attachments, SLACK_URL, SLACK_CHANNEL)
 print("Done")
