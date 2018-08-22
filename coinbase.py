@@ -17,6 +17,12 @@ class Coinbase():
                 "volume": entry[5]
             })
 
+        # Ensure timestamps are every hour
+        for i in range(len(self.data) - 1):
+            time_diff = self.data[i]['time'] - self.data[i + 1]['time']
+            assert time_diff == 3600
+
+    # Debug method
     def print_historical_prices(self):
         for entry in self.data:
             time_formatted = datetime.fromtimestamp(entry['time']).strftime("[%d/%m/%Y] %H:%M:%S")
