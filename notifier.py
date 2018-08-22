@@ -4,22 +4,24 @@ import sys
 from datetime import datetime, timedelta
 from stats import TimeIntervalData
 from coinbase import Coinbase
+from slack import Slack
 
 # Configurable Constants
 PRIMARY_CURRENCY = "BTC"
+PRIMARY_CURRENCY_LONG = "Bitcoin"
 SECONDARY_CURRENCY = "USD"
 SECONDARY_CURRENCY_SYMBOL = "$"
 EMA_THRESHOLD_PERCENT = 1
 EMA_NUM_HOURS = 18
 HOURS_BETWEEN_POSTS = 6
 
-PRICE_UP_IMAGE = ""
-PRICE_DOWN_IMAGE = ""
+PRICE_UP_IMAGE = "https://i.imgur.com/2PVZ0l1.png"
+PRICE_DOWN_IMAGE = "https://i.imgur.com/21sDn3D.png"
 
 # 'Hard' Constants
 API_URL = "https://api.pro.coinbase.com"
 CURRENCY_PAIR = f"{PRIMARY_CURRENCY}-{SECONDARY_CURRENCY}"
-SLACK_TOKEN = sys.argv[1]
+SLACK_URL = sys.argv[1]
 
 # Time param info
 time_now = datetime.now()
@@ -88,11 +90,16 @@ def format_stat(stat: TimeIntervalData):
     diff /= stat.cur_price
     diff *= 100
 
-    return f"{SECONDARY_CURRENCY_SYMBOL}{stat.cur_price} ({diff:+.2f}%)"
+    return f"{SECONDARY_CURRENCY_SYMBOL}{stat.cur_price:,.0f} ({diff:+.2f}%)"
 
-attachment_text = f"Price 1 hour ago: {format_stat(stats_1_hour)}\n" \
+attachment_text = f"Price 1 hour ago:     {format_stat(stats_1_hour)}\n" \
                     f"Price 24 hours ago: {format_stat(stats_24_hour)}\n" \
-                    f"Price 7 days ago: {format_stat(stats_7_day)}"
-attachment_pretext = f"Current {PRIMARY_CURRENCY} price: {SECONDARY_CURRENCY_SYMBOL}{stats.cur_price}"
+                    f"Price 7 days ago:     {format_stat(stats_7_day)}"
+sign_str = "down" if stats.diff_positive else "up"
+attachment_pretext = f"{PRIMARY_CURRENCY_LONG}'s has gone {sign_str}. Current price: {SECONDARY_CURRENCY_SYMBOL}{stats.cur_price:,.0f}"
 attachment = {"fallback": "some price changes", "text": attachment_text, "pretext": attachment_pretext}
-print(attachment)
+
+image_url = PRICE_UP_IMAGE if stats.diff_positive else PRICE_DOWN_IMAGE
+print("Posting to slack")
+Slack.post_to_slack("Cryptocorn", image_url, "", attachment, SLACK_URL)
+print("Done")
