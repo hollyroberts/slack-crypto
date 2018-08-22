@@ -4,7 +4,7 @@ import json
 class Slack:
     @classmethod
     def post_to_slack(cls, name, icon, text, attachments, slack_url):
-        slack_data = {"username": name, "icon_url": icon, "text": text, "attachments": [attachments]}
+        slack_data = {"username": name, "icon_url": icon, "text": text, "attachments": attachments}
         response = "null"
 
         try:
