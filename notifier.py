@@ -21,6 +21,7 @@ COLOUR_THRESHOLD_WARNING = -3
 
 PRICE_UP_IMAGE = "https://i.imgur.com/2PVZ0l1.png"
 PRICE_DOWN_IMAGE = "https://i.imgur.com/21sDn3D.png"
+BOT_NAME = "Cryptocorn"
 SLACK_CHANNEL = "#crypto"
 
 # 'Hard' Constants
@@ -122,5 +123,5 @@ attachments.append(format_stat(stats_7_day, "Price 7 days ago:      "))
 
 image_url = PRICE_UP_IMAGE if stats.diff_positive else PRICE_DOWN_IMAGE
 print("Posting to slack")
-Slack.post_to_slack("Cryptocorn", image_url, "", attachments, SLACK_URL, SLACK_CHANNEL)
+Slack.post_to_slack(BOT_NAME, image_url, "", attachments, SLACK_URL, SLACK_CHANNEL)
 print("Done")
