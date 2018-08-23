@@ -55,7 +55,6 @@ else:
 last_msg_price = None
 
 for offset in range(1, HOURS_BETWEEN_POSTS + 1):
-    break
     offset_data = TimeIntervalData(prices, EMA_NUM_HOURS, offset)
 
     if offset_data.ema_percent_diff_positive < EMA_THRESHOLD_PERCENT:
