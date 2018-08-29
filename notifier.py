@@ -1,19 +1,37 @@
 import requests
 import sys
+import argparse
 
 from datetime import datetime, timedelta
 from stats import TimeIntervalData
 from coinbase import Coinbase
 from slack import Slack
 
+# region Argparse
+parser = argparse.ArgumentParser(description="Post messages to slack if a cryptocurrency has changed price significantly")
+parser.add_argument("url",
+                    help="Slack incoming webhook URL")
+parser.add_argument("--channel", "-c", default="",
+                    help="Specify slack channel")
+parser.add_argument("--name", "-n", default="Cryptocorn",
+                    help="Webhook name",)
+parser.add_argument("--ema", "-e", default=26,
+                    help="Number of hours for EMA calculation")
+parser.add_argument("--threshold", "-t", default=2.5,
+                    help="Amount current price needs to be above EMA")
+parser.add_argument("--cooldown", "-cd", default=6,
+                    help="Number of hours to wait before reposting")
+args = parser.parse_args()
+# endregion
+
 # Configurable Constants
 PRIMARY_CURRENCY = "BTC"
 PRIMARY_CURRENCY_LONG = "Bitcoin"
 SECONDARY_CURRENCY = "USD"
 SECONDARY_CURRENCY_SYMBOL = "$"
-EMA_THRESHOLD_PERCENT = 4
-EMA_NUM_HOURS = 18
-HOURS_BETWEEN_POSTS = 6
+EMA_THRESHOLD_PERCENT = args.threshold
+EMA_NUM_HOURS = args.ema
+HOURS_BETWEEN_POSTS = args.cooldown
 
 COLOUR_THRESHOLD_GOOD = 1.5
 COLOUR_THRESHOLD_NEUTRAL = -1
@@ -21,13 +39,13 @@ COLOUR_THRESHOLD_WARNING = -3
 
 PRICE_UP_IMAGE = "https://i.imgur.com/2PVZ0l1.png"
 PRICE_DOWN_IMAGE = "https://i.imgur.com/21sDn3D.png"
-BOT_NAME = "Cryptocorn"
-SLACK_CHANNEL = "#crypto"
+BOT_NAME = args.name
+SLACK_CHANNEL = args.channel
 
 # 'Hard' Constants
 API_URL = "https://api.pro.coinbase.com"
 CURRENCY_PAIR = f"{PRIMARY_CURRENCY}-{SECONDARY_CURRENCY}"
-SLACK_URL = sys.argv[1]
+SLACK_URL = args.url
 
 # Time param info
 time_now = datetime.now()
