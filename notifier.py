@@ -15,11 +15,11 @@ parser.add_argument("--channel", "-c", default="",
                     help="Specify slack channel")
 parser.add_argument("--name", "-n", default="Cryptocorn",
                     help="Webhook name",)
-parser.add_argument("--ema", "-e", default=26,
+parser.add_argument("--ema", "-e", default=26, type=int,
                     help="Number of hours for EMA calculation")
-parser.add_argument("--threshold", "-t", default=2.5,
+parser.add_argument("--threshold", "-t", default=2.5, type=float,
                     help="Amount current price needs to be above EMA")
-parser.add_argument("--cooldown", "-cd", default=6,
+parser.add_argument("--cooldown", "-cd", default=6, type=int,
                     help="Number of hours to wait before reposting")
 args = parser.parse_args()
 # endregion
