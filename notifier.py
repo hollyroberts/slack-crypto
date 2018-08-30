@@ -2,7 +2,6 @@ import requests
 import sys
 import argparse
 import json
-from pathlib import Path
 
 from datetime import datetime, timedelta
 from stats import TimeIntervalData
@@ -23,6 +22,9 @@ parser.add_argument("--threshold", "-t", default=2.5, type=float,
                     help="Amount current price needs to be above EMA")
 parser.add_argument("--cooldown", "-cd", default=6, type=int,
                     help="Number of hours to wait before reposting")
+parser.add_argument("--json-name", "-j",
+                    help="Name of the JSON file to store with extension (use this if you're running the script multiple"
+                         "times with different parameters)")
 args = parser.parse_args()
 # endregion
 
@@ -45,13 +47,16 @@ PRICE_DOWN_IMAGE = "https://i.imgur.com/21sDn3D.png"
 BOT_NAME = args.name
 SLACK_CHANNEL = args.channel
 
-# 'Hard' Constants
+# 'Hard' Constants - may rely on other values set but shouldn't be changed
 API_URL = "https://api.pro.coinbase.com"
 CURRENCY_PAIR = f"{PRIMARY_CURRENCY}-{SECONDARY_CURRENCY}"
 SLACK_URL = args.url
-SCRIPT_NAME = Path(__file__).stem
-DATA_FILE = Path(f"last_post_data_{SCRIPT_NAME}.json")
 INTERNAL_DATE_FORMAT = "%d/%m/%Y - %H"
+
+if args.json_name is not None:
+    DATA_FILE = args.json_name
+else:
+    DATA_FILE = "last_post_data.json"
 # endregion
 
 # Time param info for request
