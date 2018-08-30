@@ -17,6 +17,9 @@ Command line args (via argparse) is used to set variables to be tweaked, althoug
  threshold percentage, cooldown period, slack channel, webhook name). There are more things that could be customisable
  via command line (eg. images, currency pair, colour thresholds), but those are easily tweakable from within the script, 
  and can be easily added via argparse (I should add them at some point).
+ 
+ At the moment only BTC-USD is 'supported', however as mentioned the constants at the start of the script are setup so
+ it's trivial to change (change the primary/secondary currency). 
 
 ## Requirements
 Python 3.6+ and standard libraries\
