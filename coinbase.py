@@ -1,7 +1,7 @@
 from datetime import datetime
 import json
 
-class Coinbase():
+class Coinbase:
     def __init__(self, json_text: str):
         historical_data = json.loads(json_text)
 
