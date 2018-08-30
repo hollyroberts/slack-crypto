@@ -49,6 +49,7 @@ SLACK_CHANNEL = args.channel
 
 # 'Hard' Constants - may rely on other values set but shouldn't be changed
 API_URL = "https://api.pro.coinbase.com"
+CANDLES_TO_RETRIEVE = 300
 CURRENCY_PAIR = f"{PRIMARY_CURRENCY}-{SECONDARY_CURRENCY}"
 SLACK_URL = args.url
 INTERNAL_DATE_FORMAT = "%d/%m/%Y - %H"
@@ -61,7 +62,7 @@ else:
 
 # Time param info for request
 time_now = datetime.utcnow()
-time_start = time_now - timedelta(hours=12)  # Doesn't matter because CB will return 300 results
+time_start = time_now - timedelta(hours=CANDLES_TO_RETRIEVE)  # CB should give 300 results, lets make sure of it
 params = {
     "start": time_start.isoformat(),
     "end": time_now.isoformat(),
