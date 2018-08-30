@@ -46,7 +46,6 @@ BOT_NAME = args.name
 SLACK_CHANNEL = args.channel
 
 # 'Hard' Constants
-# https://docs.pro.coinbase.com/#get-historic-rates
 API_URL = "https://api.pro.coinbase.com"
 CURRENCY_PAIR = f"{PRIMARY_CURRENCY}-{SECONDARY_CURRENCY}"
 SLACK_URL = args.url
@@ -55,7 +54,7 @@ DATA_FILE = Path(f"last_post_data_{SCRIPT_NAME}.json")
 INTERNAL_DATE_FORMAT = "%d/%m/%Y - %H"
 # endregion
 
-# Time param info
+# Time param info for request
 time_now = datetime.utcnow()
 time_start = time_now - timedelta(hours=12)  # Doesn't matter because CB will return 300 results
 params = {
@@ -63,6 +62,10 @@ params = {
     "end": time_now.isoformat(),
     "granularity": 3600
 }
+
+# Current time in hours
+cur_time = datetime.utcnow()
+cur_time = cur_time.replace(minute=0, second=0, microsecond=0)
 
 # Get data and convert accordingly
 historical_data = requests.get(f"{API_URL}/products/{CURRENCY_PAIR}/candles", params=params).text
@@ -96,8 +99,6 @@ def last_post_stops_posting():
             rising_str = "rising" if last_rising else "falling"
 
             # Get time difference
-            cur_time = datetime.utcnow()
-            cur_time = cur_time.replace(minute=0, second=0, microsecond=0)
             hours_diff = cur_time - last_time
             assert hours_diff.seconds % 3600 == 0
             hours_diff = hours_diff.seconds // 3600
@@ -182,8 +183,6 @@ Slack.post_to_slack(BOT_NAME, image_url, "", attachments, SLACK_URL, SLACK_CHANN
 
 # region Update JSON file
 print(f"Updating {DATA_FILE}")
-cur_time = datetime.utcnow()
-cur_time = cur_time.replace(minute=0, second=0, microsecond=0)
 new_data = {
     "price": cur_price,
     "rising": stats.diff_positive,
