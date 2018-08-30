@@ -1,2 +1,7 @@
+# Project folders
 .idea/
 __pycache__/
+
+# Test files
+date_test.py
+last_post_data_notifier.json
