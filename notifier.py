@@ -94,9 +94,9 @@ Returns true if it does
 def last_post_stops_posting():
     print("Checking last post data")
     try:
-        with open(DATA_FILE, "r") as f:
+        with open(DATA_FILE, "r") as file:
             # Read file
-            last_data = json.loads(f.read())
+            last_data = json.loads(file.read())
 
             last_price = last_data['price']
             last_time = datetime.strptime(last_data['time_hours'], INTERNAL_DATE_FORMAT)
