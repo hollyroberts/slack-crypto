@@ -25,6 +25,7 @@ parser.add_argument("--cooldown", "-cd", default=6, type=int,
                     help="Number of hours to wait before reposting")
 args = parser.parse_args()
 # endregion
+
 # region Constants
 # Configurable Constants
 PRIMARY_CURRENCY = "BTC"
@@ -139,7 +140,7 @@ if last_post_stops_posting():
     sys.exit(1)
 # endregion
 
-# Generate slack info
+# region Generate slack info
 stats_1_hour = TimeIntervalData(prices, EMA_NUM_HOURS, 1)
 stats_24_hour = TimeIntervalData(prices, EMA_NUM_HOURS, 24)
 stats_7_day = TimeIntervalData(prices, EMA_NUM_HOURS, 24 * 7)
@@ -167,17 +168,19 @@ def format_stat(stat: TimeIntervalData, text_pretext: str, pretext=None):
 
 sign_str = "up" if stats.diff_positive else "down"
 attachment_pretext = f"{PRIMARY_CURRENCY_LONG}'s price has gone {sign_str}. Current price: {SECONDARY_CURRENCY_SYMBOL}{stats.cur_price:,.0f}"
+image_url = PRICE_UP_IMAGE if stats.diff_positive else PRICE_DOWN_IMAGE
 
 # noinspection PyListCreation
 attachments = []
 attachments.append(format_stat(stats_1_hour, "Price 1 hour ago:      ", attachment_pretext))
 attachments.append(format_stat(stats_24_hour, "Price 24 hours ago:  "))
 attachments.append(format_stat(stats_7_day, "Price 7 days ago:      "))
+# endregion
 
-image_url = PRICE_UP_IMAGE if stats.diff_positive else PRICE_DOWN_IMAGE
 print("Posting to slack")
 Slack.post_to_slack(BOT_NAME, image_url, "", attachments, SLACK_URL, SLACK_CHANNEL)
 
+# region Update JSON file
 print(f"Updating {DATA_FILE}")
 cur_time = datetime.utcnow()
 cur_time = cur_time.replace(minute=0, second=0, microsecond=0)
@@ -188,5 +191,7 @@ new_data = {
 }
 with open(DATA_FILE, "w") as f:
     json.dump(new_data, f, indent=4)
+# endregion
+
 print("Done")
 
