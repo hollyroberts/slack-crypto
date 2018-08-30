@@ -178,4 +178,16 @@ attachments.append(format_stat(stats_7_day, "Price 7 days ago:      "))
 image_url = PRICE_UP_IMAGE if stats.diff_positive else PRICE_DOWN_IMAGE
 print("Posting to slack")
 Slack.post_to_slack(BOT_NAME, image_url, "", attachments, SLACK_URL, SLACK_CHANNEL)
+
+print(f"Updating {DATA_FILE}")
+cur_time = datetime.utcnow()
+cur_time = cur_time.replace(minute=0, second=0, microsecond=0)
+new_data = {
+    "price": cur_price,
+    "rising": stats.diff_positive,
+    "time_hours": cur_time.strftime(INTERNAL_DATE_FORMAT)
+}
+with open(DATA_FILE, "w") as f:
+    json.dump(new_data, f, indent=4)
 print("Done")
+
