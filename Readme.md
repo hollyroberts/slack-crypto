@@ -14,12 +14,13 @@ To prevent multiple messages being sent for a single increase/decrease, a cooldo
 ## Customisation
 Command line args (via argparse) is used to set variables to be tweaked, although only the slack incoming webhook url is
  required. Currently the amount of command line options is limited to only the variables that I find useful (EMA period, 
- threshold percentage, cooldown period, slack channel, webhook name). There are more things that could be customisable
+ threshold percentage, cooldown period, slack channel, webhook name, json file). There are more things that could be customisable
  via command line (eg. images, currency pair, colour thresholds), but those are easily tweakable from within the script, 
  and can be easily added via argparse (I should add them at some point).
  
  At the moment only BTC-USD is 'supported', however as mentioned the constants at the start of the script are setup so
- it's trivial to change (change the primary/secondary currency). 
+ it's trivial to change (change the primary/secondary currency). If you want to run the program multiple times with different
+ parameters then I highly recommend using --json-name to store a separate json file per instance.
 
 ## Requirements
 Python 3.6+ and standard libraries\
