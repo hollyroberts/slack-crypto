@@ -26,7 +26,6 @@ parser.add_argument("--cooldown", "-cd", default=6, type=int,
 args = parser.parse_args()
 # endregion
 # region Constants
-
 # Configurable Constants
 PRIMARY_CURRENCY = "BTC"
 PRIMARY_CURRENCY_LONG = "Bitcoin"
@@ -52,7 +51,7 @@ CURRENCY_PAIR = f"{PRIMARY_CURRENCY}-{SECONDARY_CURRENCY}"
 SLACK_URL = args.url
 SCRIPT_NAME = Path(__file__).stem
 DATA_FILE = Path(f"last_post_data_{SCRIPT_NAME}.json")
-
+INTERNAL_DATE_FORMAT = "%d/%m/%Y - %H"
 # endregion
 
 # Time param info
@@ -91,7 +90,7 @@ def last_post_stops_posting():
             last_data = json.loads(f.read())
 
             last_price = last_data['price']
-            last_time = datetime.strptime(last_data['time_hours'], "%d/%m/%Y - %H")
+            last_time = datetime.strptime(last_data['time_hours'], INTERNAL_DATE_FORMAT)
             last_rising = last_data['rising']
             rising_str = "rising" if last_rising else "falling"
 
