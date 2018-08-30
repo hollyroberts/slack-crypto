@@ -56,7 +56,7 @@ DATA_FILE = Path(f"last_post_data_{SCRIPT_NAME}.json")
 # endregion
 
 # Time param info
-time_now = datetime.now()
+time_now = datetime.utcnow()
 time_start = time_now - timedelta(hours=12)  # Doesn't matter because CB will return 300 results
 params = {
     "start": time_start.isoformat(),
@@ -96,7 +96,7 @@ def last_post_stops_posting():
             rising_str = "rising" if last_rising else "falling"
 
             # Get time difference
-            cur_time = datetime.now()
+            cur_time = datetime.utcnow()
             cur_time = cur_time.replace(minute=0, second=0, microsecond=0)
             hours_diff = cur_time - last_time
             assert hours_diff.seconds % 3600 == 0
