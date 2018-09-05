@@ -106,10 +106,10 @@ def last_post_stops_posting():
 
             # Get time difference
             hours_diff = cur_time - last_time
-            assert hours_diff.seconds % 3600 == 0
-            hours_diff = hours_diff.seconds // 3600
+            assert hours_diff.total_seconds() % 3600 == 0
+            hours_diff = hours_diff.total_seconds() // 3600
 
-            print(f"Last post was {hours_diff} hours ago at a price of {SECONDARY_CURRENCY_SYMBOL}{last_price} ({rising_str})")
+            print(f"Last post was {hours_diff:,.0f} hours ago at a price of {SECONDARY_CURRENCY_SYMBOL}{last_price} ({rising_str})")
 
             # Perform algorithmic checks
             if hours_diff >= HOURS_BETWEEN_POSTS:
