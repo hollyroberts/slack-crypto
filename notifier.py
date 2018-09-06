@@ -1,12 +1,12 @@
-import requests
 import sys
 import argparse
 import json
 
-from datetime import datetime, timedelta
-from stats import TimeIntervalData
-from coinbase import Coinbase
+from coinbase import Coinbase, Currency
+from history import History
+from misc import *
 from slack import Slack
+from stats import TimeIntervalData
 
 # region Argparse
 parser = argparse.ArgumentParser(description="Post messages to slack if a cryptocurrency has changed price significantly")
@@ -46,7 +46,6 @@ SLACK_CHANNEL = args.channel
 
 # 'Hard' Constants - may rely on other values set but shouldn't be changed
 SLACK_URL = args.url
-INTERNAL_DATE_FORMAT = "%d/%m/%Y - %H"
 
 if args.json_name is not None:
     DATA_FILE = args.json_name
@@ -54,29 +53,12 @@ else:
     DATA_FILE = "last_post_data.json"
 # endregion
 
-
-
-# Current time in hours
-cur_time = datetime.utcnow()
-cur_time = cur_time.replace(minute=0, second=0, microsecond=0)
-
 # Get data and convert accordingly
-
-cb = Coinbase(historical_data)
+cb = Coinbase()
 cur_price = cb.latest_price()
 prices = cb.price_list()
 
-# region Load file
-print("Loading script history data")
-with open(DATA_FILE, "r") as file:
-    # Read file
-    last_data = json.loads(file.read())
-
-    last_price = last_data['price']
-    last_time = datetime.strptime(last_data['time_hours'], INTERNAL_DATE_FORMAT)
-    last_rising = last_data['rising']
-    rising_str = "rising" if last_rising else "falling"
-# endregion
+history = History()
 
 # Check whether to update
 stats = TimeIntervalData(prices, EMA_NUM_HOURS)
@@ -88,11 +70,11 @@ else:
 
 # region Last post checks
 # Get time difference
-hours_diff = cur_time - last_time
+hours_diff = cur_time_hours() - last_time
 assert hours_diff.total_seconds() % 3600 == 0
 hours_diff = hours_diff.total_seconds() // 3600
 
-print(f"Last post was {hours_diff:,.0f} hours ago at a price of {SECONDARY_CURRENCY_SYMBOL}{last_price} ({rising_str})")
+print(f"Last post was {hours_diff:,.0f} hours ago at a price of {Currency.SECONDARY_CURRENCY_SYMBOL}{last_price} ({rising_str})")
 
 # Perform algorithmic checks
 if hours_diff >= HOURS_BETWEEN_POSTS:
@@ -100,22 +82,22 @@ if hours_diff >= HOURS_BETWEEN_POSTS:
     sys.exit(1)
 
 # If magnitude is opposite then include anyway
-if last_rising != stats.diff_positive:
+if history.rising != stats.diff_positive:
     print(f"Last change was in the opposite direction")
     sys.exit(1)
 
 # Allow if increase is greater again
-if last_rising:
+if history.rising:
     required_perc_diff = (1 + EMA_THRESHOLD_PERCENT / 100)
     threshold_sign_str = "above"
 else:
     required_perc_diff = (1 - EMA_THRESHOLD_PERCENT / 100)
     threshold_sign_str = "below"
 
-new_threshold = last_price * required_perc_diff
+new_threshold = history.price * required_perc_diff
 print(f"To repost within the cooldown period the current price must be {threshold_sign_str}: {new_threshold:.0f}")
-if (last_rising and stats.cur_price > new_threshold) or \
-        (not last_rising and stats.cur_price < new_threshold):
+if (history.rising and stats.cur_price > new_threshold) or \
+        (not history.rising and stats.cur_price < new_threshold):
     print(f"Beats new threshold price ({stats.cur_price:.0f}/{new_threshold:.0f})")
     sys.exit(1)
 
@@ -149,7 +131,7 @@ def format_stat(stat: TimeIntervalData, text_pretext: str, pretext=None):
     return attachment
 
 sign_str = "up" if stats.diff_positive else "down"
-attachment_pretext = f"{PRIMARY_CURRENCY_LONG}'s price has gone {sign_str}. Current price: {SECONDARY_CURRENCY_SYMBOL}{stats.cur_price:,.0f}"
+attachment_pretext = f"{Currency.PRIMARY_CURRENCY_LONG}'s price has gone {sign_str}. Current price: {Currency.SECONDARY_CURRENCY_SYMBOL}{stats.cur_price:,.0f}"
 image_url = PRICE_UP_IMAGE if stats.diff_positive else PRICE_DOWN_IMAGE
 
 # noinspection PyListCreation
@@ -162,16 +144,7 @@ attachments.append(format_stat(stats_7_day, "Price 7 days ago:      "))
 print("Posting to slack")
 Slack.post_to_slack(BOT_NAME, image_url, "", attachments, SLACK_URL, SLACK_CHANNEL)
 
-# region Update JSON file
-print(f"Updating {DATA_FILE}")
-new_data = {
-    "price": cur_price,
-    "rising": stats.diff_positive,
-    "time_hours": cur_time.strftime(INTERNAL_DATE_FORMAT)
-}
-with open(DATA_FILE, "w") as f:
-    json.dump(new_data, f, indent=4)
-# endregion
+history.save()
 
 print("Done")
 
