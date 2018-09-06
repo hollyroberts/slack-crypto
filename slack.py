@@ -12,7 +12,7 @@ class Slack:
             if response.status_code != requests.codes.ok:
                 cls.slack_error_msg(response, slack_data)
                 return -1
-        except requests.exceptions.ConnectionError as e:
+        except requests.exceptions.ConnectionError:
             print("Connection refused")
             cls.slack_error_msg(response, slack_data)
             return -1
