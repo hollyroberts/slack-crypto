@@ -2,7 +2,6 @@ from datetime import datetime, timedelta
 import json
 from enum import Enum
 
-import sys
 import requests
 
 class Intervals(Enum):
@@ -20,7 +19,7 @@ class Coinbase:
 
         # Parse https://docs.pro.coinbase.com/#get-historic-rates
         self.data = []
-        for entry in historical_data:
+        for entry in historical_data[::round(Intervals.HOUR.value / self.interval)]:
             self.data.append({
                 "time": entry[0],
                 "low": entry[1],
@@ -32,8 +31,9 @@ class Coinbase:
 
         # Ensure timestamps are every hour
         for i in range(len(self.data) - 1):
+            # print(datetime.fromtimestamp(self.data[i]['time']).strftime("%d/%m/%Y - %H:%M"))
             time_diff = self.data[i]['time'] - self.data[i + 1]['time']
-            assert time_diff == 60 * self.interval
+            assert time_diff == 3600
 
     def latest_price(self):
         return self.data[0]['open']
@@ -65,7 +65,7 @@ class Coinbase:
         historical_data = []
 
         # Send request
-        print(f"Retrieving data from coinbase (Interval: {self.interval})")
+        print(f"Retrieving data from coinbase (Interval: {self.interval}m)")
         for i in range(round(Intervals.HOUR.value / self.interval)):
             params["start"] = time_start.isoformat()
             params["end"] = time_now.isoformat()

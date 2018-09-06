@@ -59,8 +59,10 @@ history = History(DATA_FILE)
 stats = HourData(prices, EMA_NUM_HOURS)
 if stats.ema_percent_diff_positive < EMA_THRESHOLD_PERCENT:
     print(f"Current price not outside threshold ({stats.formatted_info()})")
-    history.ema_reset = True
-    history.save()
+
+    if not history.ema_reset:
+        history.ema_reset = True
+        history.save()
     sys.exit(1)
 
 print(f"Current price is outside threshold difference ({stats.formatted_info()})")
