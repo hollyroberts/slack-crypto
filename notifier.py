@@ -79,9 +79,9 @@ stats_1_hour = TimeIntervalData(prices, EMA_NUM_HOURS, 1)
 stats_24_hour = TimeIntervalData(prices, EMA_NUM_HOURS, 24)
 stats_7_day = TimeIntervalData(prices, EMA_NUM_HOURS, 24 * 7)
 
-sign_str = "up" if stats.diff_positive else "down"
+sign_str = "up" if stats.is_diff_positive else "down"
 attachment_pretext = f"{Currency.PRIMARY_CURRENCY_LONG}'s price has gone {sign_str}. Current price: {Currency.SECONDARY_CURRENCY_SYMBOL}{stats.cur_price:,.0f}"
-image_url = PRICE_UP_IMAGE if stats.diff_positive else PRICE_DOWN_IMAGE
+image_url = PRICE_UP_IMAGE if stats.is_diff_positive else PRICE_DOWN_IMAGE
 
 # noinspection PyListCreation
 attachments = []
@@ -93,6 +93,9 @@ attachments.append(format_stat(stats_7_day, stats, "Price 7 days ago:      "))
 print("Posting to slack")
 Slack.post_to_slack(BOT_NAME, image_url, "", attachments, SLACK_URL, SLACK_CHANNEL)
 
+history.price = stats.cur_price
+history.rising = stats.is_diff_positive
+history.ema_reset = False
 history.save()
 
 print("Done")

@@ -34,7 +34,7 @@ class TimeIntervalData:
         self.ema_percent_diff = percent_diff
         self.ema_percent_diff_positive = abs(percent_diff)
         self.diff = diff
-        self.diff_positive = diff > 0
+        self.is_diff_positive = diff > 0
 
     def formatted_info(self):
         return f"{self.cur_price:.0f}/{self.ema:.0f} - {self.ema_percent_diff_positive:.1f}%"

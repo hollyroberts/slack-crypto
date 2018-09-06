@@ -6,7 +6,7 @@ from coinbase import Currency
 from history import History
 
 def should_post(history: History, stats: TimeIntervalData, threshold: float):
-    if history.rising != stats.diff_positive:
+    if history.rising != stats.is_diff_positive:
         print(f"Last change was in the opposite direction")
         return True
 
