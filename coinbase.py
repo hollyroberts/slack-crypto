@@ -2,7 +2,6 @@ from datetime import datetime, timedelta
 import json
 from enum import Enum
 
-import sys
 import requests
 
 class Intervals(Enum):
@@ -35,8 +34,7 @@ class Coinbase:
             time_diff = self.data[i]['time'] - self.data[i + 1]['time']
             assert time_diff == 60 * self.interval
 
-    def latest_price(self):
-        return self.data[0]['open']
+        self.latest_price = self.data[0]['open']
 
     """Return a list of the last prices in reverse order (using open)"""
     def price_list(self):

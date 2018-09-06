@@ -48,7 +48,7 @@ else:
 
 # Get data and convert accordingly
 cb = Coinbase()
-cur_price = cb.latest_price()
+cur_price = cb.latest_price
 prices = cb.price_list()
 
 # Get history from last runs, use it to work out what test to make
