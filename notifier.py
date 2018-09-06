@@ -79,6 +79,18 @@ cb = Coinbase(historical_data)
 cur_price = cb.latest_price()
 prices = cb.price_list()
 
+# region Load file
+print("Loading script history data")
+with open(DATA_FILE, "r") as file:
+    # Read file
+    last_data = json.loads(file.read())
+
+    last_price = last_data['price']
+    last_time = datetime.strptime(last_data['time_hours'], INTERNAL_DATE_FORMAT)
+    last_rising = last_data['rising']
+    rising_str = "rising" if last_rising else "falling"
+# endregion
+
 # Check whether to update
 stats = TimeIntervalData(prices, EMA_NUM_HOURS)
 if stats.ema_percent_diff_positive < EMA_THRESHOLD_PERCENT:
@@ -88,63 +100,39 @@ else:
     print(f"Current price increased above threshold difference ({stats.formatted_info()})")
 
 # region Last post checks
-""" 
-Check whether last post stops from posting
-Returns true if it does
-"""
-def last_post_stops_posting():
-    print("Checking last post data")
-    try:
-        with open(DATA_FILE, "r") as file:
-            # Read file
-            last_data = json.loads(file.read())
+# Get time difference
+hours_diff = cur_time - last_time
+assert hours_diff.total_seconds() % 3600 == 0
+hours_diff = hours_diff.total_seconds() // 3600
 
-            last_price = last_data['price']
-            last_time = datetime.strptime(last_data['time_hours'], INTERNAL_DATE_FORMAT)
-            last_rising = last_data['rising']
-            rising_str = "rising" if last_rising else "falling"
+print(f"Last post was {hours_diff:,.0f} hours ago at a price of {SECONDARY_CURRENCY_SYMBOL}{last_price} ({rising_str})")
 
-            # Get time difference
-            hours_diff = cur_time - last_time
-            assert hours_diff.total_seconds() % 3600 == 0
-            hours_diff = hours_diff.total_seconds() // 3600
-
-            print(f"Last post was {hours_diff:,.0f} hours ago at a price of {SECONDARY_CURRENCY_SYMBOL}{last_price} ({rising_str})")
-
-            # Perform algorithmic checks
-            if hours_diff >= HOURS_BETWEEN_POSTS:
-                print(f"Last post was longer ago than the cooldown value ({HOURS_BETWEEN_POSTS})")
-                return False
-
-            # If magnitude is opposite then include anyway
-            if last_rising != stats.diff_positive:
-                print(f"Last change was in the opposite direction")
-                return False
-
-            # Allow if increase is greater again
-            if last_rising:
-                required_perc_diff = (1 + EMA_THRESHOLD_PERCENT / 100)
-                threshold_sign_str = "above"
-            else:
-                required_perc_diff = (1 - EMA_THRESHOLD_PERCENT / 100)
-                threshold_sign_str = "below"
-
-            new_threshold = last_price * required_perc_diff
-            print(f"To repost within the cooldown period the current price must be {threshold_sign_str}: {new_threshold:.0f}")
-            if (last_rising and stats.cur_price > new_threshold) or \
-                    (not last_rising and stats.cur_price < new_threshold):
-                print(f"Beats new threshold price ({stats.cur_price:.0f}/{new_threshold:.0f})")
-                return False
-
-            print(f"Does not beat new threshold price: ({stats.cur_price:.0f}/{new_threshold:.0f})")
-            return True
-    except Exception as e:
-        print(e)
-        print("Checks to see whether the last post stops this script from posting failed. Therefore check omitted")
-        return False
-
-if last_post_stops_posting():
+# Perform algorithmic checks
+if hours_diff >= HOURS_BETWEEN_POSTS:
+    print(f"Last post was longer ago than the cooldown value ({HOURS_BETWEEN_POSTS})")
     sys.exit(1)
+
+# If magnitude is opposite then include anyway
+if last_rising != stats.diff_positive:
+    print(f"Last change was in the opposite direction")
+    sys.exit(1)
+
+# Allow if increase is greater again
+if last_rising:
+    required_perc_diff = (1 + EMA_THRESHOLD_PERCENT / 100)
+    threshold_sign_str = "above"
+else:
+    required_perc_diff = (1 - EMA_THRESHOLD_PERCENT / 100)
+    threshold_sign_str = "below"
+
+new_threshold = last_price * required_perc_diff
+print(f"To repost within the cooldown period the current price must be {threshold_sign_str}: {new_threshold:.0f}")
+if (last_rising and stats.cur_price > new_threshold) or \
+        (not last_rising and stats.cur_price < new_threshold):
+    print(f"Beats new threshold price ({stats.cur_price:.0f}/{new_threshold:.0f})")
+    sys.exit(1)
+
+print(f"Does not beat new threshold price: ({stats.cur_price:.0f}/{new_threshold:.0f})")
 # endregion
 
 # region Generate slack info
