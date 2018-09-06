@@ -7,8 +7,8 @@ from misc import Misc
 
 class Slack:
     @classmethod
-    def post_to_slack(cls, name, icon, text, attachments, slack_url, channel=""):
-        slack_data = {"username": name, "icon_url": icon, "text": text, "attachments": attachments, "channel": channel}
+    def post_to_slack(cls, name: str, icon_url: str, text: str, attachments: list, slack_url: str, channel=""):
+        slack_data = {"username": name, "icon_url": icon_url, "text": text, "attachments": attachments, "channel": channel}
         response = "null"
 
         try:
