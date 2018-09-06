@@ -1,6 +1,8 @@
 import requests
 import json
 
+from misc import *
+
 class Slack:
     @classmethod
     def post_to_slack(cls, name, icon, text, attachments, slack_url, channel=""):
@@ -29,3 +31,20 @@ class Slack:
         print(response)
         print("Data sent:")
         print(slack_data)
+
+    @classmethod
+    def generate_attachment(cls, prices: list, stats: TimeIntervalData, ema: int):
+        stats_1_hour = TimeIntervalData(prices, ema, 1)
+        stats_24_hour = TimeIntervalData(prices, ema, 24)
+        stats_7_day = TimeIntervalData(prices, ema, 24 * 7)
+
+        sign_str = "up" if stats.is_diff_positive else "down"
+        attachment_pretext = f"{Currency.PRIMARY_CURRENCY_LONG}'s price has gone {sign_str}. Current price: {Currency.SECONDARY_CURRENCY_SYMBOL}{stats.cur_price:,.0f}"
+
+        # noinspection PyListCreation
+        attachments = []
+        attachments.append(format_stat(stats_1_hour, stats, "Price 1 hour ago:      ", attachment_pretext))
+        attachments.append(format_stat(stats_24_hour, stats, "Price 24 hours ago:  "))
+        attachments.append(format_stat(stats_7_day, stats, "Price 7 days ago:      "))
+        
+        return attachments

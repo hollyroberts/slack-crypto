@@ -37,8 +37,14 @@ class SlackColourThresholds:
     NEUTRAL = 0
     WARNING = -1
 
-PRICE_UP_IMAGE = "https://i.imgur.com/2PVZ0l1.png"
-PRICE_DOWN_IMAGE = "https://i.imgur.com/21sDn3D.png"
+class SlackImages:
+    UP = "https://i.imgur.com/2PVZ0l1.png"
+    DOWN = "https://i.imgur.com/21sDn3D.png"
+
+    @classmethod
+    def get_image(cls, up: bool):
+        return cls.UP if up else cls.DOWN
+
 BOT_NAME = args.name
 SLACK_CHANNEL = args.channel
 
@@ -73,23 +79,9 @@ print(f"Current price is outside threshold difference ({stats.formatted_info()})
 if not should_post(history, stats, EMA_THRESHOLD_PERCENT):
     sys.exit(1)
 
-# region Generate slack info
-stats_1_hour = TimeIntervalData(prices, EMA_NUM_HOURS, 1)
-stats_24_hour = TimeIntervalData(prices, EMA_NUM_HOURS, 24)
-stats_7_day = TimeIntervalData(prices, EMA_NUM_HOURS, 24 * 7)
-
-sign_str = "up" if stats.is_diff_positive else "down"
-attachment_pretext = f"{Currency.PRIMARY_CURRENCY_LONG}'s price has gone {sign_str}. Current price: {Currency.SECONDARY_CURRENCY_SYMBOL}{stats.cur_price:,.0f}"
-image_url = PRICE_UP_IMAGE if stats.is_diff_positive else PRICE_DOWN_IMAGE
-
-# noinspection PyListCreation
-attachments = []
-attachments.append(format_stat(stats_1_hour, stats, "Price 1 hour ago:      ", attachment_pretext))
-attachments.append(format_stat(stats_24_hour, stats, "Price 24 hours ago:  "))
-attachments.append(format_stat(stats_7_day, stats, "Price 7 days ago:      "))
-# endregion
-
 print("Posting to slack")
+attachments = Slack.generate_attachment(prices, stats, EMA_NUM_HOURS)
+image_url = SlackImages.get_image(stats.is_diff_positive)
 Slack.post_to_slack(BOT_NAME, image_url, "", attachments, SLACK_URL, SLACK_CHANNEL)
 
 history.price = stats.cur_price
