@@ -30,10 +30,7 @@ args = parser.parse_args()
 
 # region Constants
 # Configurable Constants
-PRIMARY_CURRENCY = "BTC"
-PRIMARY_CURRENCY_LONG = "Bitcoin"
-SECONDARY_CURRENCY = "USD"
-SECONDARY_CURRENCY_SYMBOL = "$"
+
 EMA_THRESHOLD_PERCENT = args.threshold
 EMA_NUM_HOURS = args.ema
 HOURS_BETWEEN_POSTS = args.cooldown
@@ -48,9 +45,6 @@ BOT_NAME = args.name
 SLACK_CHANNEL = args.channel
 
 # 'Hard' Constants - may rely on other values set but shouldn't be changed
-API_URL = "https://api.pro.coinbase.com"
-CANDLES_TO_RETRIEVE = 300
-CURRENCY_PAIR = f"{PRIMARY_CURRENCY}-{SECONDARY_CURRENCY}"
 SLACK_URL = args.url
 INTERNAL_DATE_FORMAT = "%d/%m/%Y - %H"
 
@@ -60,21 +54,14 @@ else:
     DATA_FILE = "last_post_data.json"
 # endregion
 
-# Time param info for request
-time_now = datetime.utcnow()
-time_start = time_now - timedelta(hours=CANDLES_TO_RETRIEVE)  # CB should give 300 results, lets make sure of it
-params = {
-    "start": time_start.isoformat(),
-    "end": time_now.isoformat(),
-    "granularity": 3600
-}
+
 
 # Current time in hours
 cur_time = datetime.utcnow()
 cur_time = cur_time.replace(minute=0, second=0, microsecond=0)
 
 # Get data and convert accordingly
-historical_data = requests.get(f"{API_URL}/products/{CURRENCY_PAIR}/candles", params=params).text
+
 cb = Coinbase(historical_data)
 cur_price = cb.latest_price()
 prices = cb.price_list()
