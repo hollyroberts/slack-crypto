@@ -1,10 +1,12 @@
 import argparse
 import sys
 
+from history import History
+from misc import Misc
 from coinbase import Coinbase
-from misc import *
 from slack import Slack
 from stats import TimeIntervalData
+from constants import SlackImages
 
 # region Argparse
 parser = argparse.ArgumentParser(description="Post messages to slack if a cryptocurrency has changed price significantly")
@@ -31,19 +33,6 @@ args = parser.parse_args()
 EMA_THRESHOLD_PERCENT = args.threshold
 EMA_NUM_HOURS = args.ema
 HOURS_BETWEEN_POSTS = args.cooldown
-
-class SlackColourThresholds:
-    GOOD = 1
-    NEUTRAL = 0
-    WARNING = -1
-
-class SlackImages:
-    UP = "https://i.imgur.com/2PVZ0l1.png"
-    DOWN = "https://i.imgur.com/21sDn3D.png"
-
-    @classmethod
-    def get_image(cls, up: bool):
-        return cls.UP if up else cls.DOWN
 
 BOT_NAME = args.name
 SLACK_CHANNEL = args.channel
@@ -76,7 +65,7 @@ if stats.ema_percent_diff_positive < EMA_THRESHOLD_PERCENT:
 
 print(f"Current price is outside threshold difference ({stats.formatted_info()})")
 
-if not should_post(history, stats, EMA_THRESHOLD_PERCENT):
+if not Misc.should_post(history, stats, EMA_THRESHOLD_PERCENT):
     sys.exit(1)
 
 print("Posting to slack")
@@ -90,4 +79,3 @@ history.ema_reset = False
 history.save()
 
 print("Done")
-

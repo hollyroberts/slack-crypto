@@ -22,7 +22,7 @@ class History:
             print("Couldn't load file, using default values")
             self.ema_reset = True
             self.price = None
-            self.rising_str = True
+            self.rising = True
             self.rising_str = "ERR"
             self.loaded = False
 

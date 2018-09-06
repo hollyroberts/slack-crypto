@@ -1,7 +1,9 @@
 import requests
 import json
 
-from misc import *
+from coinbase import Currency
+from stats import TimeIntervalData
+from misc import Misc
 
 class Slack:
     @classmethod
@@ -43,8 +45,8 @@ class Slack:
 
         # noinspection PyListCreation
         attachments = []
-        attachments.append(format_stat(stats_1_hour, stats, "Price 1 hour ago:      ", attachment_pretext))
-        attachments.append(format_stat(stats_24_hour, stats, "Price 24 hours ago:  "))
-        attachments.append(format_stat(stats_7_day, stats, "Price 7 days ago:      "))
+        attachments.append(Misc.format_stat(stats_1_hour, stats, "Price 1 hour ago:      ", attachment_pretext))
+        attachments.append(Misc.format_stat(stats_24_hour, stats, "Price 24 hours ago:  "))
+        attachments.append(Misc.format_stat(stats_7_day, stats, "Price 7 days ago:      "))
         
         return attachments

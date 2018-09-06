@@ -23,4 +23,4 @@ __pycache__/
 
 # Test files
 date_test.py
-last_post_data_notifier.json
+last_post_data.json
