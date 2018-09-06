@@ -1,6 +1,5 @@
 import sys
 import argparse
-import json
 
 from coinbase import Coinbase, Currency
 from history import History
@@ -30,14 +29,14 @@ args = parser.parse_args()
 
 # region Constants
 # Configurable Constants
-
 EMA_THRESHOLD_PERCENT = args.threshold
 EMA_NUM_HOURS = args.ema
 HOURS_BETWEEN_POSTS = args.cooldown
 
-COLOUR_THRESHOLD_GOOD = 1
-COLOUR_THRESHOLD_NEUTRAL = 0
-COLOUR_THRESHOLD_WARNING = -1
+class SlackColourThresholds:
+    GOOD = 1
+    NEUTRAL = 0
+    WARNING = -1
 
 PRICE_UP_IMAGE = "https://i.imgur.com/2PVZ0l1.png"
 PRICE_DOWN_IMAGE = "https://i.imgur.com/21sDn3D.png"
@@ -58,7 +57,7 @@ cb = Coinbase()
 cur_price = cb.latest_price()
 prices = cb.price_list()
 
-history = History()
+history = History(DATA_FILE)
 
 # Check whether to update
 stats = TimeIntervalData(prices, EMA_NUM_HOURS)
@@ -69,18 +68,6 @@ else:
     print(f"Current price increased above threshold difference ({stats.formatted_info()})")
 
 # region Last post checks
-# Get time difference
-hours_diff = cur_time_hours() - last_time
-assert hours_diff.total_seconds() % 3600 == 0
-hours_diff = hours_diff.total_seconds() // 3600
-
-print(f"Last post was {hours_diff:,.0f} hours ago at a price of {Currency.SECONDARY_CURRENCY_SYMBOL}{last_price} ({rising_str})")
-
-# Perform algorithmic checks
-if hours_diff >= HOURS_BETWEEN_POSTS:
-    print(f"Last post was longer ago than the cooldown value ({HOURS_BETWEEN_POSTS})")
-    sys.exit(1)
-
 # If magnitude is opposite then include anyway
 if history.rising != stats.diff_positive:
     print(f"Last change was in the opposite direction")
@@ -108,27 +95,6 @@ print(f"Does not beat new threshold price: ({stats.cur_price:.0f}/{new_threshold
 stats_1_hour = TimeIntervalData(prices, EMA_NUM_HOURS, 1)
 stats_24_hour = TimeIntervalData(prices, EMA_NUM_HOURS, 24)
 stats_7_day = TimeIntervalData(prices, EMA_NUM_HOURS, 24 * 7)
-
-def format_stat(stat: TimeIntervalData, text_pretext: str, pretext=None):
-    diff = stats.cur_price - stat.cur_price
-    diff /= stat.cur_price
-    diff *= 100
-
-    if diff > COLOUR_THRESHOLD_GOOD:
-        colour = "good"
-    elif diff > COLOUR_THRESHOLD_NEUTRAL:
-        colour = ""
-    elif diff > COLOUR_THRESHOLD_WARNING:
-        colour = "warning"
-    else:
-        colour = "danger"
-
-    text = f"{text_pretext}{SECONDARY_CURRENCY_SYMBOL}{stat.cur_price:,.0f} ({diff:+.2f}%)"
-    attachment = {"fallback": "some price changes", "text": text, "color": colour}
-    if pretext is not None:
-        attachment['pretext'] = pretext
-
-    return attachment
 
 sign_str = "up" if stats.diff_positive else "down"
 attachment_pretext = f"{Currency.PRIMARY_CURRENCY_LONG}'s price has gone {sign_str}. Current price: {Currency.SECONDARY_CURRENCY_SYMBOL}{stats.cur_price:,.0f}"
