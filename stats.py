@@ -16,7 +16,7 @@ class Stats:
         return current_ema
 
 """Data class to calculate stats from basic input data"""
-class TimeIntervalData:
+class HourData:
     def __init__(self, price_data, ema_num_hours, offset: int = 0):
         if offset > 0:
             price_data = price_data[offset:]

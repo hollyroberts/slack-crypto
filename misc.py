@@ -1,13 +1,13 @@
 from datetime import datetime
 
 from constants import SlackColourThresholds
-from stats import TimeIntervalData
+from stats import HourData
 from coinbase import Currency
 from history import History
 
 class Misc:
     @staticmethod
-    def should_post(history: History, stats: TimeIntervalData, threshold: float):
+    def should_post(history: History, stats: HourData, threshold: float):
         if history.rising != stats.is_diff_positive:
             print(f"Last change was in the opposite direction")
             return True
@@ -35,7 +35,7 @@ class Misc:
                 return False
 
     @staticmethod
-    def format_stat(stat: TimeIntervalData, stats: TimeIntervalData, text_pretext: str, pretext=None):
+    def format_stat(stat: HourData, stats: HourData, text_pretext: str, pretext=None):
         diff = stats.cur_price - stat.cur_price
         diff /= stat.cur_price
         diff *= 100

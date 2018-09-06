@@ -2,7 +2,7 @@ import requests
 import json
 
 from coinbase import Currency
-from stats import TimeIntervalData
+from stats import HourData
 from misc import Misc
 
 class Slack:
@@ -35,10 +35,10 @@ class Slack:
         print(slack_data)
 
     @classmethod
-    def generate_attachment(cls, prices: list, stats: TimeIntervalData, ema: int):
-        stats_1_hour = TimeIntervalData(prices, ema, 1)
-        stats_24_hour = TimeIntervalData(prices, ema, 24)
-        stats_7_day = TimeIntervalData(prices, ema, 24 * 7)
+    def generate_attachment(cls, prices: list, stats: HourData, ema: int):
+        stats_1_hour = HourData(prices, ema, 1)
+        stats_24_hour = HourData(prices, ema, 24)
+        stats_7_day = HourData(prices, ema, 24 * 7)
 
         sign_str = "up" if stats.is_diff_positive else "down"
         attachment_pretext = f"{Currency.PRIMARY_CURRENCY_LONG}'s price has gone {sign_str}. Current price: {Currency.SECONDARY_CURRENCY_SYMBOL}{stats.cur_price:,.0f}"

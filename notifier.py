@@ -5,7 +5,7 @@ from history import History
 from misc import Misc
 from coinbase import Coinbase
 from slack import Slack
-from stats import TimeIntervalData
+from stats import HourData
 from constants import SlackImages
 
 # region Argparse
@@ -56,7 +56,7 @@ history = History(DATA_FILE)
 
 # Get stats from coinbase data
 # If change isn't large enough, then update history and exit
-stats = TimeIntervalData(prices, EMA_NUM_HOURS)
+stats = HourData(prices, EMA_NUM_HOURS)
 if stats.ema_percent_diff_positive < EMA_THRESHOLD_PERCENT:
     print(f"Current price not outside threshold ({stats.formatted_info()})")
     history.ema_reset = True
