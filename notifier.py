@@ -1,8 +1,7 @@
-import sys
 import argparse
+import sys
 
-from coinbase import Coinbase, Currency
-from history import History
+from coinbase import Coinbase
 from misc import *
 from slack import Slack
 from stats import TimeIntervalData
