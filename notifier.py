@@ -57,39 +57,22 @@ cb = Coinbase()
 cur_price = cb.latest_price()
 prices = cb.price_list()
 
+# Get history from last runs, use it to work out what test to make
 history = History(DATA_FILE)
 
-# Check whether to update
+# Get stats from coinbase data
+# If change isn't large enough, then update history and exit
 stats = TimeIntervalData(prices, EMA_NUM_HOURS)
 if stats.ema_percent_diff_positive < EMA_THRESHOLD_PERCENT:
     print(f"Current price not outside threshold ({stats.formatted_info()})")
-    sys.exit(1)
-else:
-    print(f"Current price increased above threshold difference ({stats.formatted_info()})")
-
-# region Last post checks
-# If magnitude is opposite then include anyway
-if history.rising != stats.diff_positive:
-    print(f"Last change was in the opposite direction")
+    history.ema_reset = True
+    history.save()
     sys.exit(1)
 
-# Allow if increase is greater again
-if history.rising:
-    required_perc_diff = (1 + EMA_THRESHOLD_PERCENT / 100)
-    threshold_sign_str = "above"
-else:
-    required_perc_diff = (1 - EMA_THRESHOLD_PERCENT / 100)
-    threshold_sign_str = "below"
+print(f"Current price is outside threshold difference ({stats.formatted_info()})")
 
-new_threshold = history.price * required_perc_diff
-print(f"To repost within the cooldown period the current price must be {threshold_sign_str}: {new_threshold:.0f}")
-if (history.rising and stats.cur_price > new_threshold) or \
-        (not history.rising and stats.cur_price < new_threshold):
-    print(f"Beats new threshold price ({stats.cur_price:.0f}/{new_threshold:.0f})")
+if not should_post(history, stats, EMA_THRESHOLD_PERCENT):
     sys.exit(1)
-
-print(f"Does not beat new threshold price: ({stats.cur_price:.0f}/{new_threshold:.0f})")
-# endregion
 
 # region Generate slack info
 stats_1_hour = TimeIntervalData(prices, EMA_NUM_HOURS, 1)
@@ -102,9 +85,9 @@ image_url = PRICE_UP_IMAGE if stats.diff_positive else PRICE_DOWN_IMAGE
 
 # noinspection PyListCreation
 attachments = []
-attachments.append(format_stat(stats_1_hour, "Price 1 hour ago:      ", attachment_pretext))
-attachments.append(format_stat(stats_24_hour, "Price 24 hours ago:  "))
-attachments.append(format_stat(stats_7_day, "Price 7 days ago:      "))
+attachments.append(format_stat(stats_1_hour, stats, "Price 1 hour ago:      ", attachment_pretext))
+attachments.append(format_stat(stats_24_hour, stats, "Price 24 hours ago:  "))
+attachments.append(format_stat(stats_7_day, stats, "Price 7 days ago:      "))
 # endregion
 
 print("Posting to slack")
