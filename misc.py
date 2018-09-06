@@ -14,25 +14,25 @@ class Misc:
 
         if history.ema_reset:
             return True
-        else:
-            # Allow if increase is greater again
-            print("Price has not gone back within the EMA threshold since the last post")
-            if history.rising:
-                required_perc_diff = (1 + threshold / 100)
-                threshold_sign_str = "above"
-            else:
-                required_perc_diff = (1 - threshold / 100)
-                threshold_sign_str = "below"
 
-            new_threshold = history.price * required_perc_diff
-            print(f"To post again the current price must be {threshold_sign_str}: {new_threshold:.0f}")
-            if (history.rising and stats.cur_price > new_threshold) or \
-                    (not history.rising and stats.cur_price < new_threshold):
-                print(f"Beats new threshold price ({stats.cur_price:.0f}/{new_threshold:.0f})")
-                return True
-            else:
-                print(f"Does not beat new threshold price: ({stats.cur_price:.0f}/{new_threshold:.0f})")
-                return False
+        # Allow if increase is greater again
+        print("Price has not gone back within the EMA threshold since the last post")
+        if history.rising:
+            required_perc_diff = (1 + threshold / 100)
+            threshold_sign_str = "above"
+        else:
+            required_perc_diff = (1 - threshold / 100)
+            threshold_sign_str = "below"
+
+        new_threshold = history.price * required_perc_diff
+        print(f"To post again the current price must be {threshold_sign_str}: {new_threshold:.0f}")
+        if (history.rising and stats.cur_price > new_threshold) or \
+                (not history.rising and stats.cur_price < new_threshold):
+            print(f"Beats new threshold price ({stats.cur_price:.0f}/{new_threshold:.0f})")
+            return True
+        else:
+            print(f"Does not beat new threshold price: ({stats.cur_price:.0f}/{new_threshold:.0f})")
+            return False
 
     @staticmethod
     def format_stat(stat: HourData, stats: HourData, text_pretext: str, pretext=None):
