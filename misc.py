@@ -7,10 +7,16 @@ from history import History
 
 class Misc:
     @staticmethod
-    def should_post(history: History, stats: HourData, threshold: float):
+    def should_post(history: History, stats: HourData, prices: list, threshold: float):
         if history.rising != stats.is_diff_positive:
             print(f"Last change was in the opposite direction")
             return True
+
+        # Hour change must reflect EMA change
+        risen_hour = stats.cur_price - prices[1]
+        if risen_hour != stats.is_diff_positive:
+            print("Hourly change does not agree with EMA change")
+            return False
 
         if history.ema_reset:
             return True

@@ -68,7 +68,7 @@ if stats.ema_percent_diff_positive < EMA_THRESHOLD_PERCENT:
 
 print(f"Current price is outside threshold difference ({stats.formatted_info()})")
 
-if not Misc.should_post(history, stats, EMA_THRESHOLD_PERCENT):
+if not Misc.should_post(history, stats, prices, EMA_THRESHOLD_PERCENT):
     sys.exit(1)
 
 print("Posting to slack")
