@@ -1,25 +1,23 @@
+import sys
+import time
 from datetime import datetime, timedelta
 import json
-from enum import Enum
 
 import requests
-
-class Intervals(Enum):
-    HOUR = 60
-    MINUTE_15 = 15
-    MINUTE_5 = 5
 
 class Coinbase:
     API_URL = "https://api.pro.coinbase.com"
     CANDLES_TO_RETRIEVE = 300
-    interval = Intervals.MINUTE_15.value
+    MINS_IN_HOUR = 60
+    SECS_IN_MINUTE = 60
+    interval = 60
 
     def __init__(self):
         historical_data = self.__retrieve_from_coinbase()
 
         # Parse https://docs.pro.coinbase.com/#get-historic-rates
         self.data = []
-        for entry in historical_data[::round(Intervals.HOUR.value / self.interval)]:
+        for entry in historical_data[::round(self.MINS_IN_HOUR / self.interval)]:
             self.data.append({
                 "time": entry[0],
                 "low": entry[1],
@@ -33,7 +31,7 @@ class Coinbase:
         for i in range(len(self.data) - 1):
             # print(datetime.fromtimestamp(self.data[i]['time']).strftime("%d/%m/%Y - %H:%M"))
             time_diff = self.data[i]['time'] - self.data[i + 1]['time']
-            assert time_diff == 3600
+            assert time_diff == self.SECS_IN_MINUTE * self.MINS_IN_HOUR
 
     def latest_price(self):
         return self.data[0]['open']
@@ -60,17 +58,17 @@ class Coinbase:
         time_start = time_now - time_delta
 
         params = {
-            "granularity": 60 * self.interval
+            "granularity": self.SECS_IN_MINUTE * self.interval
         }
         historical_data = []
 
         # Send request
-        print(f"Retrieving data from coinbase (Interval: {self.interval}m)")
-        for i in range(round(Intervals.HOUR.value / self.interval)):
+        print(f"Retrieving data from coinbase (interval {self.interval} mins)")
+        for i in range(round(self.MINS_IN_HOUR / self.interval)):
             params["start"] = time_start.isoformat()
             params["end"] = time_now.isoformat()
 
-            json_text = requests.get(f"{self.API_URL}/products/{Currency.CURRENCY_PAIR}/candles", params=params).text
+            json_text = self.__get_request(f"{self.API_URL}/products/{Currency.CURRENCY_PAIR}/candles", params=params)
             historical_data += json.loads(json_text)
 
             time_now -= time_delta
@@ -81,6 +79,21 @@ class Coinbase:
                 time_now -= timedelta(minutes=self.interval)
 
         return historical_data
+
+    @staticmethod
+    def __get_request(url: str, params: dict):
+        while True:
+            resp = requests.get(url, params=params)
+
+            if resp.status_code == 429:
+                print("GET request received 429 (timeout). Waiting 1 second and trying again")
+                time.sleep(1)
+                continue
+            elif resp.status_code != 200:
+                print("API error - Response code was not 200 or 429")
+                sys.exit(-1)
+            else:
+                return resp.text
 
 class Currency:
     PRIMARY_CURRENCY = "BTC"

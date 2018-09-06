@@ -18,6 +18,8 @@ parser.add_argument("--name", "-n", default="Cryptocorn",
                     help="Webhook name",)
 parser.add_argument("--ema", "-e", default=26, type=int,
                     help="Number of hours for EMA calculation")
+parser.add_argument("-i", "--interval", default=60, type=int, choices=[5, 15, 60],
+                    help="Resolution of data to fetch from coinbase (minutes)")
 parser.add_argument("--threshold", "-t", default=2.5, type=float,
                     help="Amount current price needs to be above EMA")
 parser.add_argument("--json-name", "-j",
@@ -41,6 +43,8 @@ if args.json_name is not None:
     DATA_FILE = args.json_name
 else:
     DATA_FILE = "last_post_data.json"
+
+Coinbase.interval = args.interval
 # endregion
 
 # Get data and convert accordingly
