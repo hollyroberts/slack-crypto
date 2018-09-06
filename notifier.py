@@ -20,8 +20,6 @@ parser.add_argument("--ema", "-e", default=26, type=int,
                     help="Number of hours for EMA calculation")
 parser.add_argument("--threshold", "-t", default=2.5, type=float,
                     help="Amount current price needs to be above EMA")
-parser.add_argument("--cooldown", "-cd", default=6, type=int,
-                    help="Number of hours to wait before reposting")
 parser.add_argument("--json-name", "-j",
                     help="Name of the JSON file to store with extension (use this if you're running the script multiple"
                          "times with different parameters)")
@@ -32,7 +30,6 @@ args = parser.parse_args()
 # Configurable Constants
 EMA_THRESHOLD_PERCENT = args.threshold
 EMA_NUM_HOURS = args.ema
-HOURS_BETWEEN_POSTS = args.cooldown
 
 BOT_NAME = args.name
 SLACK_CHANNEL = args.channel
