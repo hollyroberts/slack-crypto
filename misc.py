@@ -13,7 +13,7 @@ class Misc:
             return True
 
         # Hour change must reflect EMA change
-        risen_hour = stats.cur_price - prices[1]
+        risen_hour = (stats.cur_price - prices[1]) > 0
         if risen_hour != stats.is_diff_positive:
             print("Hourly change does not agree with EMA change")
             return False
