@@ -31,6 +31,7 @@ class Coinbase:
         for i in range(len(self.data) - 1):
             # print(datetime.fromtimestamp(self.data[i]['time']).strftime("%d/%m/%Y - %H:%M"))
             time_diff = self.data[i]['time'] - self.data[i + 1]['time']
+            # print(time_diff)
             assert time_diff == self.SECS_IN_MINUTE * self.MINS_IN_HOUR
 
     def latest_price(self):
@@ -50,35 +51,49 @@ class Coinbase:
             time_formatted = datetime.fromtimestamp(entry['time']).strftime("[%d/%m/%Y] %H:%M:%S")
             print(time_formatted + " - " + str(entry['open']))
 
+    """Query the API for a specific price"""
+    @classmethod
+    def price_days_ago(cls, days: int):
+        time_ago = datetime.utcnow() - timedelta(days=days)
+
+        historical_data = cls.__get_historical_prices(time_ago, time_ago, cls.SECS_IN_MINUTE)
+        print(historical_data)
+
     """Retrieve the un filtered results from coinbase according to the interval"""
     def __retrieve_from_coinbase(self):
         # Time param info for request
         time_delta = timedelta(minutes=self.CANDLES_TO_RETRIEVE * self.interval)
-        time_now = datetime.utcnow()
-        time_start = time_now - time_delta
+        time_end = datetime.utcnow()
+        time_start = time_end - time_delta
+        granularity = self.SECS_IN_MINUTE * self.interval
 
-        params = {
-            "granularity": self.SECS_IN_MINUTE * self.interval
-        }
         historical_data = []
 
         # Send request
         print(f"Retrieving data from coinbase (interval {self.interval} mins)")
         for i in range(round(self.MINS_IN_HOUR / self.interval)):
-            params["start"] = time_start.isoformat()
-            params["end"] = time_now.isoformat()
+            historical_data += self.__get_historical_prices(time_start, time_end, granularity)
 
-            json_text = self.__get_request(f"{self.API_URL}/products/{Currency.CURRENCY_PAIR}/candles", params=params)
-            historical_data += json.loads(json_text)
-
-            time_now -= time_delta
+            time_end -= time_delta
             time_start -= time_delta
 
             # Ugly hack
             if i == 0:
-                time_now -= timedelta(minutes=self.interval)
+                time_end -= timedelta(minutes=self.interval)
 
         return historical_data
+
+    """Get historical prices from coinbase unaltered"""
+    @classmethod
+    def __get_historical_prices(cls, start: datetime, end: datetime, granularity: int):
+        params = {
+            "start": start.isoformat(),
+            "end": end.isoformat(),
+            "granularity": granularity
+        }
+
+        json_text = cls.__get_request(f"{cls.API_URL}/products/{Currency.CURRENCY_PAIR}/candles", params=params)
+        return json.loads(json_text)
 
     @staticmethod
     def __get_request(url: str, params: dict):
