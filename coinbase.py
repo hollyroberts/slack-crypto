@@ -56,8 +56,12 @@ class Coinbase:
     def price_days_ago(cls, days: int):
         time_ago = datetime.utcnow() - timedelta(days=days)
 
-        historical_data = cls.__get_historical_prices(time_ago, time_ago, cls.SECS_IN_MINUTE)
-        print(historical_data)
+        historical_data = cls.__get_historical_prices(time_ago - timedelta(minutes=1), time_ago, cls.SECS_IN_MINUTE)
+        historical_time = historical_data[0][0]
+        historical_price = historical_data[0][3]
+
+        print(f"Price {days} days ago was {Currency.SECONDARY_CURRENCY_SYMBOL}{historical_price} (exact time: " + datetime.fromtimestamp(historical_time).strftime("%d/%m/%Y - %H:%M") + ")")
+        return historical_price
 
     """Retrieve the un filtered results from coinbase according to the interval"""
     def __retrieve_from_coinbase(self):
