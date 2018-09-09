@@ -1,7 +1,7 @@
 import requests
 import json
 
-from coinbase import Currency
+from coinbase import Currency, Coinbase
 from stats import HourData
 from constants import SlackColourThresholds
 
@@ -45,16 +45,29 @@ class Slack:
 
         # noinspection PyListCreation
         attachments = []
-        attachments.append(cls.format_stat(stats_1_hour, stats, "Price 1 hour ago:      ", attachment_pretext))
-        attachments.append(cls.format_stat(stats_24_hour, stats, "Price 24 hours ago:  "))
-        attachments.append(cls.format_stat(stats_7_day, stats, "Price 7 days ago:      "))
+        attachments.append(cls.format_stat_wrapper(stats_1_hour, stats, "Price 1 hour ago:      ", attachment_pretext))
+        attachments.append(cls.format_stat_wrapper(stats_24_hour, stats, "Price 24 hours ago:  "))
+        attachments.append(cls.format_stat_wrapper(stats_7_day, stats, "Price 7 days ago:      "))
+
+        # Try to add 28 day stats
+        # noinspection PyBroadException
+        try:
+            price_28_days = Coinbase.price_days_ago(28)
+            attachments.append(cls.format_stat(price_28_days, stats.cur_price, "Price 28 days ago:      "))
+        except Exception as e:
+            print(e)
+            print("Ignoring error, posting 3 historical prices instead of 4 (28 day price omitted)")
         
         return attachments
 
+    @classmethod
+    def format_stat_wrapper(cls, stat: HourData, stats: HourData, text_pretext: str, pretext=None):
+        return cls.format_stat(stat.cur_price, stats.cur_price, text_pretext, pretext)
+
     @staticmethod
-    def format_stat(stat: HourData, stats: HourData, text_pretext: str, pretext=None):
-        diff = stats.cur_price - stat.cur_price
-        diff /= stat.cur_price
+    def format_stat(historical_price, cur_price, text_pretext: str, pretext=None):
+        diff = cur_price - historical_price
+        diff /= historical_price
         diff *= 100
 
         if diff > SlackColourThresholds.GOOD:
@@ -66,7 +79,7 @@ class Slack:
         else:
             colour = "danger"
 
-        text = f"{text_pretext}{Currency.SECONDARY_CURRENCY_SYMBOL}{stat.cur_price:,.0f} ({diff:+.2f}%)"
+        text = f"{text_pretext}{Currency.SECONDARY_CURRENCY_SYMBOL}{historical_price:,.0f} ({diff:+.2f}%)"
         attachment = {"fallback": "some price changes", "text": text, "color": colour}
         if pretext is not None:
             attachment['pretext'] = pretext
