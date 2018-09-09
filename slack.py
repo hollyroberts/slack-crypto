@@ -35,25 +35,25 @@ class Slack:
         print(slack_data)
 
     @classmethod
-    def generate_attachment(cls, prices: list, stats: HourData, ema: int):
+    def generate_attachment(cls, prices: list, current_stats: HourData, ema: int):
         stats_1_hour = HourData(prices, ema, 1)
         stats_24_hour = HourData(prices, ema, 24)
         stats_7_day = HourData(prices, ema, 24 * 7)
 
-        sign_str = "up" if stats.is_diff_positive else "down"
-        attachment_pretext = f"{Currency.PRIMARY_CURRENCY_LONG}'s price has gone {sign_str}. Current price: {Currency.SECONDARY_CURRENCY_SYMBOL}{stats.cur_price:,.0f}"
+        sign_str = "up" if current_stats.is_diff_positive else "down"
+        attachment_pretext = f"{Currency.PRIMARY_CURRENCY_LONG}'s price has gone {sign_str}. Current price: {Currency.SECONDARY_CURRENCY_SYMBOL}{current_stats.cur_price:,.0f}"
 
         # noinspection PyListCreation
         attachments = []
-        attachments.append(cls.format_stat_wrapper(stats_1_hour, stats, "Price 1 hour ago:      ", attachment_pretext))
-        attachments.append(cls.format_stat_wrapper(stats_24_hour, stats, "Price 24 hours ago:  "))
-        attachments.append(cls.format_stat_wrapper(stats_7_day, stats, "Price 7 days ago:      "))
+        attachments.append(cls.format_stat_wrapper(stats_1_hour, current_stats, "Price 1 hour ago:      ", attachment_pretext))
+        attachments.append(cls.format_stat_wrapper(stats_24_hour, current_stats, "Price 24 hours ago:  "))
+        attachments.append(cls.format_stat_wrapper(stats_7_day, current_stats, "Price 7 days ago:      "))
 
         # Try to add 28 day stats
         # noinspection PyBroadException
         try:
             price_28_days = Coinbase.price_days_ago(28)
-            attachments.append(cls.format_stat(price_28_days, stats.cur_price, "Price 28 days ago:     "))
+            attachments.append(cls.format_stat(price_28_days, current_stats.cur_price, "Price 28 days ago:     "))
         except Exception as e:
             print(e)
             print("Ignoring error, posting 3 historical prices instead of 4 (28 day price omitted)")
