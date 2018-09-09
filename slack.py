@@ -53,7 +53,7 @@ class Slack:
         # noinspection PyBroadException
         try:
             price_28_days = Coinbase.price_days_ago(28)
-            attachments.append(cls.format_stat(price_28_days, stats.cur_price, "Price 28 days ago:      "))
+            attachments.append(cls.format_stat(price_28_days, stats.cur_price, "Price 28 days ago:     "))
         except Exception as e:
             print(e)
             print("Ignoring error, posting 3 historical prices instead of 4 (28 day price omitted)")
