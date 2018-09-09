@@ -35,3 +35,26 @@ class Analysis:
         else:
             print(f"Does not beat new threshold price: ({stats.cur_price:.0f}/{new_threshold:.0f})")
             return False
+
+    @staticmethod
+    def ema_checks(stats: HourData, history: History, ema_threshold: float, reset_perc: float):
+        if stats.ema_percent_diff_positive > ema_threshold:
+            print(f"Current price is outside threshold difference ({stats.formatted_info()})")
+            return False
+
+        print(f"Current price not outside threshold ({stats.formatted_info()})")
+
+        # If EMA hasn't been reset then check whether we should reset it
+        if not history.ema_reset:
+            if history.rising:
+                target = history.price * (1 - reset_perc / 100)
+                should_reset = stats.ema > target
+            else:
+                target = history.price * (1 + reset_perc / 100)
+                should_reset = stats.ema < target
+
+            if should_reset:
+                history.ema_reset = True
+                history.save()
+
+        return True

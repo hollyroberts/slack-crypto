@@ -58,15 +58,8 @@ history = History(DATA_FILE)
 # Get stats from coinbase data
 # If change isn't large enough, then update history and exit
 stats = HourData(prices, EMA_NUM_HOURS)
-if stats.ema_percent_diff_positive < EMA_THRESHOLD_PERCENT:
-    print(f"Current price not outside threshold ({stats.formatted_info()})")
-
-    if not history.ema_reset:
-        history.ema_reset = True
-        history.save()
+if Analysis.ema_checks(stats, history, EMA_THRESHOLD_PERCENT, 0.5):
     sys.exit(1)
-
-print(f"Current price is outside threshold difference ({stats.formatted_info()})")
 
 if not Analysis.should_post(history, stats, prices, EMA_THRESHOLD_PERCENT):
     sys.exit(1)
