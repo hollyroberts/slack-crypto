@@ -3,7 +3,7 @@ import json
 
 from coinbase import Currency
 from stats import HourData
-from misc import Misc
+from constants import SlackColourThresholds
 
 class Slack:
     @classmethod
@@ -45,8 +45,30 @@ class Slack:
 
         # noinspection PyListCreation
         attachments = []
-        attachments.append(Misc.format_stat(stats_1_hour, stats, "Price 1 hour ago:      ", attachment_pretext))
-        attachments.append(Misc.format_stat(stats_24_hour, stats, "Price 24 hours ago:  "))
-        attachments.append(Misc.format_stat(stats_7_day, stats, "Price 7 days ago:      "))
+        attachments.append(cls.format_stat(stats_1_hour, stats, "Price 1 hour ago:      ", attachment_pretext))
+        attachments.append(cls.format_stat(stats_24_hour, stats, "Price 24 hours ago:  "))
+        attachments.append(cls.format_stat(stats_7_day, stats, "Price 7 days ago:      "))
         
         return attachments
+
+    @staticmethod
+    def format_stat(stat: HourData, stats: HourData, text_pretext: str, pretext=None):
+        diff = stats.cur_price - stat.cur_price
+        diff /= stat.cur_price
+        diff *= 100
+
+        if diff > SlackColourThresholds.GOOD:
+            colour = "good"
+        elif diff > SlackColourThresholds.NEUTRAL:
+            colour = ""
+        elif diff > SlackColourThresholds.WARNING:
+            colour = "warning"
+        else:
+            colour = "danger"
+
+        text = f"{text_pretext}{Currency.SECONDARY_CURRENCY_SYMBOL}{stat.cur_price:,.0f} ({diff:+.2f}%)"
+        attachment = {"fallback": "some price changes", "text": text, "color": colour}
+        if pretext is not None:
+            attachment['pretext'] = pretext
+
+        return attachment

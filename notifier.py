@@ -2,7 +2,7 @@ import argparse
 import sys
 
 from history import History
-from misc import Misc
+from analysis import Analysis
 from coinbase import Coinbase
 from slack import Slack
 from stats import HourData
@@ -68,7 +68,7 @@ if stats.ema_percent_diff_positive < EMA_THRESHOLD_PERCENT:
 
 print(f"Current price is outside threshold difference ({stats.formatted_info()})")
 
-if not Misc.should_post(history, stats, prices, EMA_THRESHOLD_PERCENT):
+if not Analysis.should_post(history, stats, prices, EMA_THRESHOLD_PERCENT):
     sys.exit(1)
 
 print("Posting to slack")
