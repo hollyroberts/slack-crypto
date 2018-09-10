@@ -1,7 +1,12 @@
+import hashlib
 from http.server import BaseHTTPRequestHandler, HTTPServer
 import urllib.parse as urlparse
+import hmac
 
 class Server(BaseHTTPRequestHandler):
+    VERSION = "v0"
+    SIGNING_SECRET = ""
+
     SIG_STRING = "X-Slack-Signature"
     REQ_TS = "X-Slack-Request-Timestamp"
     CONTENT_TYPE = "application/x-www-form-urlencoded"
@@ -27,11 +32,11 @@ class Server(BaseHTTPRequestHandler):
         body_data = self.rfile.read(content_length).decode("utf-8")
 
         # Parse body data
-        parsed = urlparse.parse_qs(body_data)
-        print(parsed['token'][0])
+        body_dict = urlparse.parse_qs(body_data)
 
-        signature = self.headers[self.SIG_STRING]
-        print(f"{self.SIG_STRING}: {signature}")
+        if not self.verify_signature(body_data):
+            self.send_error(401)
+            return
 
         # Parse args
         print("Sending 200 response")
@@ -55,6 +60,34 @@ class Server(BaseHTTPRequestHandler):
                 return False
 
         return True
+
+    """Verify that message was given by slack
+    https://api.slack.com/docs/verifying-requests-from-slack"""
+    def verify_signature(self, body: str):
+        print("Verifying signature")
+
+        # Read headers
+        given_sig = self.headers[self.SIG_STRING]
+        timestamp = self.headers[self.REQ_TS]
+
+        # Compute signature
+        sig_basestring = self.VERSION + ":" + timestamp + ":" + body
+        digest = hmac.new(str.encode(self.SIGNING_SECRET), sig_basestring.encode("utf-8"), digestmod=hashlib.sha256)
+        computed_sig = self.VERSION + "=" + digest.hexdigest()
+
+        # Compare
+        if hmac.compare_digest(computed_sig, given_sig):
+            return True
+        else:
+            print("Signatures don't match")
+            print(f"Given: {given_sig}")
+            print(f"Expected: {computed_sig}")
+
+    """Debug method to print body contents received"""
+    @staticmethod
+    def print_body_dict(body_dict: dict):
+        for key in body_dict:
+            print(key + ": " + body_dict[key][0])
 
     @staticmethod
     def run(port):
