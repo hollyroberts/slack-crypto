@@ -2,8 +2,13 @@ import hashlib
 from http.server import BaseHTTPRequestHandler, HTTPServer
 import urllib.parse as urlparse
 import hmac
+import time
 
 class Server(BaseHTTPRequestHandler):
+    # Seconds to allow for timestamp mismatch
+    # SHA-256 should be secure enough to set it to 5 minutes (value given in docs)
+    REPLAY_PREVENTION = 300
+
     VERSION = "v0"
     SIGNING_SECRET = ""
 
@@ -69,6 +74,13 @@ class Server(BaseHTTPRequestHandler):
         # Read headers
         given_sig = self.headers[self.SIG_STRING]
         timestamp = self.headers[self.REQ_TS]
+
+        # Ensure timestamp isn't too old
+        unix_now = time.time()
+        time_diff = unix_now - int(timestamp)
+        if time_diff > self.REPLAY_PREVENTION:
+            print(f"Time difference was too large ({time_diff:,.0f} seconds)")
+            return False
 
         # Compute signature
         sig_basestring = self.VERSION + ":" + timestamp + ":" + body
