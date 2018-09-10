@@ -18,10 +18,10 @@ parser.add_argument("--name", "-n", default="Cryptocorn",
                     help="Webhook name",)
 parser.add_argument("--ema", "-e", default=26, type=int,
                     help="Number of hours for EMA calculation")
-parser.add_argument("-i", "--interval", default=60, type=int, choices=[5, 15, 60],
+parser.add_argument("--interval", "--i", default=60, type=int, choices=[5, 15, 60],
                     help="Resolution of data to fetch from coinbase (minutes)")
 parser.add_argument("--threshold-ema", "-te", default=2.5, type=float,
-                    help="Amount current price needs to be above/below the EMA")
+                    help="Amount current price needs to be above/below the EMA to cause a post to be sent")
 parser.add_argument("--threshold-reset", "-tr", default=1.25, type=float,
                     help="Amount EMA price needs to be within last post price to reset")
 parser.add_argument("--json-name", "-j",
