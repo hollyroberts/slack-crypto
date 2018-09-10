@@ -121,3 +121,17 @@ class Currency:
     SECONDARY_CURRENCY_SYMBOL = "$"
 
     CURRENCY_PAIR = f"{PRIMARY_CURRENCY}-{SECONDARY_CURRENCY}"
+
+    CRYPTO_MAP = {
+        "BTC": ["Bitcoin"],
+        "BCH": ["Bitcoin Cash", "BCash"],
+        "ETH": ["Ethereum"],
+        "ETC": ["Ethereum Classic"],
+        "LTC": ["Litecoin"]
+    }
+
+    FIAT_MAP = {
+        "EUR": ["Euro", "Euros"],
+        "GBP": ["Pound", "Pounds", "Great British Pounds", "Sterling"],
+        "USD": ["Dollar", "Dollars", "Freedom Money"]
+    }
