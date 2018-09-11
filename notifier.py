@@ -3,7 +3,7 @@ import sys
 
 from history import History
 from analysis import Analysis
-from coinbase import Coinbase
+from coinbase import Coinbase, Currencies
 from slack import Slack
 from stats import HourData
 from constants import SlackImages
@@ -46,14 +46,12 @@ if args.json_name is not None:
     DATA_FILE = args.json_name
 else:
     DATA_FILE = "last_post_data.json"
-
-Coinbase.interval = args.interval
 # endregion
 
 # Get data and convert accordingly
-cb = Coinbase()
-cur_price = cb.latest_price()
+cb = Coinbase(Currencies.default(), args.interval)
 prices = cb.price_list()
+cur_price = prices[0]
 
 # Get history from last runs, use it to work out what test to make
 history = History(DATA_FILE)
@@ -68,7 +66,7 @@ if not Analysis.should_post(history, stats, prices, EMA_THRESHOLD_PERCENT):
     sys.exit(1)
 
 print("Message should be posted, generating attachment")
-attachments = Slack.generate_post(prices, stats)
+attachments = Slack.generate_post(prices, stats, Currencies.default())
 image_url = SlackImages.get_image(stats.is_diff_positive)
 print("Posting to slack")
 Slack.post_to_slack(BOT_NAME, image_url, "", attachments, SLACK_URL, SLACK_CHANNEL)

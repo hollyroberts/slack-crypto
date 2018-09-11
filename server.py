@@ -92,18 +92,19 @@ class CommandHandler(BaseHTTPRequestHandler):
 
     @staticmethod
     def create_slack_attachments(currency: Currency, days: list):
+        cb = Coinbase(currency, 1)
         time_now = datetime.utcnow()
 
         # Get 0/1/24 hour prices
-        minute_prices = Coinbase.get_historical_prices(time_now - timedelta(minutes=60), time_now, granularity=60)
+        minute_prices = cb.get_historical_prices(time_now - timedelta(minutes=60), time_now)
         cur_price = minute_prices[0][3]
         price_1_hour = minute_prices[60][3]
-        price_24_hour = Coinbase.price_days_ago(1)
+        price_24_hour = cb.price_days_ago(1)
 
         # Get day prices
         day_prices = {}
         for day in days:
-            day_prices[day] = Coinbase.price_days_ago(day)
+            day_prices[day] = cb.price_days_ago(day)
 
         # Create message
         pretext = f"{currency.primary_long}'s current price is: {currency.secondary_symbol}{cur_price:,.0f}"

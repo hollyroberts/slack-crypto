@@ -48,16 +48,14 @@ class Slack:
         return attachments
 
     @classmethod
-    def generate_post(cls, prices: list, current_stats: HourData):
+    def generate_post(cls, prices: list, current_stats: HourData, currency: Currency):
         cur_price = current_stats.cur_price
         price_1_hour = prices[1]
         price_24_hour = prices[24]
         price_7_day = prices[24 * 7]
 
-        currency = Currency(Currencies.PRIMARY_CURRENCY, Currencies.SECONDARY_CURRENCY)
-
         sign_str = "up" if current_stats.is_diff_positive else "down"
-        attachment_pretext = f"{Currencies.PRIMARY_CURRENCY_LONG}'s price has gone {sign_str}. Current price: {Currencies.SECONDARY_CURRENCY_SYMBOL}{current_stats.cur_price:,.0f}"
+        attachment_pretext = f"{currency.primary_long}'s price has gone {sign_str}. Current price: {currency.secondary_symbol}{current_stats.cur_price:,.0f}"
 
         # noinspection PyListCreation
         attachments = []
@@ -71,7 +69,8 @@ class Slack:
         # Try to add 28 day stats
         # noinspection PyBroadException
         try:
-            price_28_days = Coinbase.price_days_ago(28)
+            cb = Coinbase(currency)
+            price_28_days = cb.price_days_ago(28)
             attachments.append(cls.format_stat_new(cur_price, price_28_days, currency, False))
         except Exception as e:
             print(e)
