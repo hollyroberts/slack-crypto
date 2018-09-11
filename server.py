@@ -3,6 +3,7 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 import urllib.parse as urlparse
 import hmac
 import time
+from coinbase import Currency
 
 class Server(BaseHTTPRequestHandler):
     # Seconds to allow for timestamp mismatch
@@ -44,8 +45,72 @@ class Server(BaseHTTPRequestHandler):
             return
 
         # Parse args
-        print("Sending 200 response")
+        self.parse_args(body_dict)
+
+        # Send 200
+        print("Sending initial 200 response")
         self.send_response(200)
+
+    def parse_args(self, body_dict: dict):
+        # Default values
+        print("Parsing args")
+        messages = body_dict['text'][0].split()
+
+        # Work out which args are what
+        num_str_args = 0
+        i = 0
+        while len(messages) > i:
+            msg = messages[i]
+            i += 1
+
+            if msg.isdigit():
+                break
+            num_str_args += 1
+
+        if num_str_args > 2:
+            raise ParseError("Received too many non digit entries")
+
+        while len(messages) > i:
+            msg = messages[i]
+            i += 1
+
+            if not msg.isdigit():
+                raise ParseError("Received non digit entry after digit entry")
+
+        # Get currency info
+        if num_str_args == 1:
+            crypto, fiat, fiat_symbol = self.parse_currency_args_1(messages[0])
+        elif num_str_args == 2:
+            crypto, fiat, fiat_symbol = self.parse_currency_args_1(messages[0])
+        else:
+            crypto, fiat, fiat_symbol = Currency.PRIMARY_CURRENCY, Currency.SECONDARY_CURRENCY, Currency.SECONDARY_CURRENCY_SYMBOL
+
+        days = (int(d) for d in messages[num_str_args:])
+        return crypto, fiat, fiat_symbol, days
+
+    @staticmethod
+    def parse_currency_args_1(message: str):
+        crypto = Currency.get_map_match(Currency.CRYPTO_MAP, message)
+        if crypto is not None:
+            return crypto, Currency.SECONDARY_CURRENCY, Currency.SECONDARY_CURRENCY_SYMBOL
+
+        fiat = Currency.get_map_match(Currency.FIAT_MAP, message)
+        if fiat is not None:
+            return Currency.PRIMARY_CURRENCY, fiat, Currency.FIAT_SYMBOL_MAP[fiat]
+
+        raise ParseError("Could not parse first argument to cryptocurrency or fiat currency")
+
+    @staticmethod
+    def parse_currency_args_2(message: list):
+        crypto = Currency.get_map_match(Currency.CRYPTO_MAP, message[0])
+        if crypto is None:
+            raise ParseError("Could not parse first argument as cryptocurrency")
+
+        fiat = Currency.get_map_match(Currency.FIAT_MAP, message[1])
+        if fiat is None:
+            raise ParseError("Could not parse second argument as fiat currency")
+
+        return crypto, fiat, Currency.FIAT_SYMBOL_MAP[fiat]
 
     """Checks that message was from slack and has headers we expect"""
     def basic_header_verification(self):
@@ -106,3 +171,6 @@ class Server(BaseHTTPRequestHandler):
         server = HTTPServer(('', port), Server)
         print(f"Web server started on port {port}")
         server.serve_forever()
+
+class ParseError(Exception):
+    pass
