@@ -66,11 +66,14 @@ class CommandHandler(BaseHTTPRequestHandler):
             return
 
         # Send 200
+        # Temporary code to notify about GBP support (TODO remove after a month)
         print("Sending initial 200 response")
+        resp = []
         if len(days) > 2:
-            self.initial_response(f"Retrieving data for {len(days)} days, this may take a few seconds")
-        else:
-            self.initial_response()
+            resp.append(f"Retrieving data for {len(days)} days, this may take a few seconds")
+        if currency.secondary == "GBP" and currency.primary != "BTC":
+            resp.append("The GBP currency has only just been added for certain trading pairs, manually reduce the days to retrieve (otherwise this command will fail)")
+        self.initial_response('\n'.join(resp))
 
         # Process request on separate thread to not block 200 response
         t = threading.Thread(target=self.post_200_code, args=(currency, days, body_dict['response_url'][0]))
