@@ -141,3 +141,19 @@ class Currency:
         "GBP": "£",
         "USD": "$"
     }
+
+    """Used to improve access to maps"""
+    @staticmethod
+    def get_map_match(curr_map: dict, string: str):
+        string_lower = string.lower()
+
+        for key in curr_map:
+            if string_lower == key.lower():
+                return key
+
+            value_list = curr_map[key]
+            for value in value_list:
+                if string_lower == value.lower():
+                    return key
+
+        return None
