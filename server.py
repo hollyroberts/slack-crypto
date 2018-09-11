@@ -38,6 +38,11 @@ class CommandHandler(BaseHTTPRequestHandler):
     def do_POST(self):
         print(f"Incoming HTTP POST: {self.path}")
 
+        if self.path != "/slack/crypto":
+            print("Path not /slack/crypto")
+            self.send_error(400)
+            return
+
         if not self.basic_header_verification():
             self.send_error(400)
             return
