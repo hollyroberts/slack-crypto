@@ -56,6 +56,9 @@ class CommandHandler(BaseHTTPRequestHandler):
             self.send_error(401)
             return
 
+        if self.help_message(body_dict):
+            return
+
         # Parse args
         try:
             currency, days = self.parse_args(body_dict)
@@ -168,6 +171,20 @@ class CommandHandler(BaseHTTPRequestHandler):
         days = sorted(set(days))
 
         return currency, days
+
+    def help_message(self, body_dict: dict):
+        text = body_dict.get("text", "")[0].lower()
+        if not(text == "h" or text == "help"):
+            return False
+
+        return_msg = "The first 2 arguments can be optionally used to specify the cryptocurrency and fiat pair (1 or both can be omitted)\n" \
+                     "The remaining arguments are the number of days back you want to retrieve prices for (eg. /prices \"bitcoin cash\" 7 14 will retrieve the price 1 and 2 weeks ago for bitcoin cash). " \
+                     "By default the price 7 and 28 days ago are fetched" \
+                     "\n\nSupported cryptocurrencies: " + ', '.join(sorted(Currencies.CRYPTO_MAP.keys())) + \
+                     "\nSupported fiat currencies: " + ', '.join(sorted(Currencies.FIAT_MAP.keys()))
+
+        self.initial_response(return_msg)
+        return True
 
     @staticmethod
     def parse_currency_args_1(message: str):
