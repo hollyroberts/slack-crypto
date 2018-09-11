@@ -1,7 +1,7 @@
 import requests
 import json
 
-from coinbase import Currencies, Currency, Coinbase
+from coinbase import Currency, Coinbase
 from stats import HourData
 from constants import SlackColourThresholds
 

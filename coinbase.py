@@ -5,12 +5,8 @@ import json
 import requests
 
 class Currencies:
-    PRIMARY_CURRENCY = "BTC"
-    PRIMARY_CURRENCY_LONG = "Bitcoin"
-    SECONDARY_CURRENCY = "USD"
-    SECONDARY_CURRENCY_SYMBOL = "$"
-
-    CURRENCY_PAIR = f"{PRIMARY_CURRENCY}-{SECONDARY_CURRENCY}"
+    CRYPTO_DEFAULT = "BTC"
+    FIAT_DEFAULT = "USD"
 
     CRYPTO_MAP = {
         "BTC": ["Bitcoin"],
@@ -34,7 +30,7 @@ class Currencies:
 
     @classmethod
     def default(cls):
-        return Currency(cls.PRIMARY_CURRENCY, cls.SECONDARY_CURRENCY)
+        return Currency(cls.CRYPTO_DEFAULT, cls.FIAT_DEFAULT)
 
     """Used to improve access to maps"""
     @staticmethod
@@ -124,7 +120,6 @@ class Coinbase:
         time_delta = timedelta(minutes=self.CANDLES_TO_RETRIEVE * self.interval)
         time_end = datetime.utcnow()
         time_start = time_end - time_delta
-        granularity = self.SECS_IN_MINUTE * self.interval
 
         historical_data = []
 

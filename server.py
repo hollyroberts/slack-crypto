@@ -147,7 +147,7 @@ class CommandHandler(BaseHTTPRequestHandler):
         elif num_str_args == 2:
             currency = self.parse_currency_args_2(messages)
         else:
-            currency = Currency(Currencies.PRIMARY_CURRENCY, Currencies.SECONDARY_CURRENCY)
+            currency = Currency(Currencies.CRYPTO_DEFAULT, Currencies.FIAT_DEFAULT)
 
         # Extract, order, remove duplicate days, and remove days < 2
         days = list(int(d) for d in messages[num_str_args:] if int(d) >= 2)
@@ -162,12 +162,12 @@ class CommandHandler(BaseHTTPRequestHandler):
         # Is arg crypto?
         crypto = Currencies.get_map_match(Currencies.CRYPTO_MAP, message)
         if crypto is not None:
-            return Currency(crypto, Currencies.SECONDARY_CURRENCY)
+            return Currency(crypto, Currencies.FIAT_DEFAULT)
 
         # Is arg fiat?
         fiat = Currencies.get_map_match(Currencies.FIAT_MAP, message)
         if fiat is not None:
-            return Currency(Currencies.PRIMARY_CURRENCY, fiat)
+            return Currency(Currencies.CRYPTO_DEFAULT, fiat)
 
         raise ParseError("Could not parse first argument to cryptocurrency or fiat currency")
 
