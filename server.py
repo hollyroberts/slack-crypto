@@ -76,11 +76,13 @@ class CommandHandler(BaseHTTPRequestHandler):
         self.initial_response('\n'.join(resp))
 
         # Process request on separate thread to not block 200 response
-        t = threading.Thread(target=self.post_200_code, args=(currency, days, body_dict['response_url'][0]))
+        response_url = body_dict['response_url'][0]
+        username = body_dict['user_name'][0]
+        t = threading.Thread(target=self.post_200_code, args=(response_url, username, currency, days))
         t.daemon = True
         t.start()
 
-    def post_200_code(self, currency, days, url):
+    def post_200_code(self, url, user, currency, days):
         # Get prices and attachment from prices
         try:
             slack_attachments = self.create_slack_attachments(currency, days)
@@ -91,7 +93,11 @@ class CommandHandler(BaseHTTPRequestHandler):
 
         # Post to slack
         print("Posting to slack")
-        self.send_response_msg(url, {"attachments": slack_attachments}, ephemeral=False)
+        json_msg = {
+            "text": f"{user} requested a price report",
+            "attachments": slack_attachments
+        }
+        self.send_response_msg(url, json_msg, ephemeral=False)
 
     @staticmethod
     def create_slack_attachments(currency: Currency, days: list):
