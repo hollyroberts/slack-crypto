@@ -9,6 +9,7 @@ from slack import Slack
 from datetime import datetime, timedelta
 import requests
 import json
+import threading
 
 class CommandHandler(BaseHTTPRequestHandler):
     # Seconds to allow for timestamp mismatch
@@ -29,10 +30,6 @@ class CommandHandler(BaseHTTPRequestHandler):
         REQ_TS: None
     }
 
-    def __init__(self, request, client_address, server):
-        super().__init__(request, client_address, server)
-        self.response_url = ''
-
     # POST is for submitting data.
     # noinspection PyPep8Naming
     def do_POST(self):
@@ -46,7 +43,6 @@ class CommandHandler(BaseHTTPRequestHandler):
         content_length = int(self.headers.get('Content-Length', 0))
         body_data = self.rfile.read(content_length).decode("utf-8")
         body_dict = urlparse.parse_qs(body_data)
-        self.response_url = body_dict['response_url'][0]
 
         if not self.verify_signature(body_data):
             self.send_error(401)
@@ -64,17 +60,22 @@ class CommandHandler(BaseHTTPRequestHandler):
         print("Sending initial 200 response")
         self.initial_response()
 
+        t = threading.Thread(target=self.post_200_code, args=(currency, days, body_dict['response_url'][0]))
+        t.daemon = True
+        t.start()
+
+    def post_200_code(self, currency, days, url):
         # Get prices and attachment from prices
         try:
             slack_attachments = self.create_slack_attachments(currency, days)
         except IOError as e:
             print(e)
-            self.send_response_msg({"text": "Error retrieving data, please try again later (or complain at blackened)"})
+            self.send_response_msg(url, {"text": "Error retrieving data, please try again later (or complain at blackened)"})
             return
 
         # Post to slack
         print("Posting to slack")
-        self.send_response_msg({"attachments": slack_attachments}, ephemeral=False)
+        self.send_response_msg(url, {"attachments": slack_attachments}, ephemeral=False)
 
     @staticmethod
     def create_slack_attachments(currency: Currency, days: list):
@@ -224,17 +225,18 @@ class CommandHandler(BaseHTTPRequestHandler):
             print(f"Given: {given_sig}")
             print(f"Expected: {computed_sig}")
 
-    def send_response_msg(self, json_msg, ephemeral=True):
+    def send_response_msg(self, url, json_msg, ephemeral=True):
         if ephemeral:
             json_msg['response_type'] = "ephemeral"
         else:
             json_msg['response_type'] = "in_channel"
 
-        requests.post(self.response_url, data=json.dumps(json_msg), headers={"content-type": "application/json"})
+        requests.post(url, data=json.dumps(json_msg), headers={"content-type": "application/json"})
 
     """Send 200 message back"""
     def initial_response(self, message: str = None):
         self.send_response(200)
+        self.end_headers()
         self.flush_headers()
 
         if message is not None:
