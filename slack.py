@@ -71,7 +71,7 @@ class Slack:
         try:
             cb = Coinbase(currency)
             price_28_days = cb.price_days_ago(28)
-            attachments.append(cls.format_price_entry(cur_price, price_28_days, currency, False))
+            attachments.append(cls.format_price_entry(cur_price, price_28_days, currency, 28, False))
         except Exception as e:
             print(e)
             print("Ignoring error, posting 3 historical prices instead of 4 (28 day price omitted)")
