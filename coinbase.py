@@ -157,3 +157,11 @@ class Currencies:
                     return key
 
         return None
+
+class Currency:
+    def __init__(self, primary: str, secondary: str):
+        self.primary = primary
+        self.primary_long = Currencies.CRYPTO_MAP[primary][0]
+
+        self.secondary = secondary
+        self.secondary_symbol = Currencies.FIAT_SYMBOL_MAP[secondary]
