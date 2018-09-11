@@ -96,10 +96,7 @@ class CommandHandler(BaseHTTPRequestHandler):
         time_now = datetime.utcnow()
 
         # Get 0/1/24 hour prices
-        minute_prices = cb.get_historical_prices(time_now - timedelta(minutes=60), time_now)
-        print(minute_prices)
-        cur_price = minute_prices[0][3]
-        price_1_hour = minute_prices[60][3]
+        cur_price, price_1_hour = cb.get_prices_closest_to_time(time_now, time_now - timedelta(minutes=60))
         price_24_hour = cb.price_days_ago(1)
 
         # Get day prices

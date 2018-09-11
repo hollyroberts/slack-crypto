@@ -107,7 +107,7 @@ class Coinbase:
     def price_days_ago(self, days: int):
         time_ago = datetime.utcnow() - timedelta(days=days)
 
-        historical_data = self.get_historical_prices(time_ago - timedelta(minutes=1), time_ago)
+        historical_data = self.get_historical_prices(time_ago - timedelta(minutes=300), time_ago)
         historical_time = historical_data[0][0]
         historical_price = historical_data[0][3]
 
