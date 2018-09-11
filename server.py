@@ -16,6 +16,9 @@ class CommandHandler(BaseHTTPRequestHandler):
     # SHA-256 should be secure enough to set it to 5 minutes (value given in docs)
     REPLAY_PREVENTION = 300
 
+    # Maximum days to be allowed to retrieve
+    MAX_DAYS = 20
+
     VERSION = "v0"
     SIGNING_SECRET = ""
 
@@ -56,10 +59,20 @@ class CommandHandler(BaseHTTPRequestHandler):
             self.initial_response(f"Parse error: {e}")
             return
 
+        # Don't allow more than 20 days to be retrieved
+        if len(days) > self.MAX_DAYS:
+            print(f"Number of days was greater than {self.MAX_DAYS}")
+            self.initial_response(f"Max number of days to request is {self.MAX_DAYS}")
+            return
+
         # Send 200
         print("Sending initial 200 response")
-        self.initial_response()
+        if len(days) > 2:
+            self.initial_response(f"Retrieving data for {len(days)} days, this may take a few seconds")
+        else:
+            self.initial_response()
 
+        # Process request on separate thread to not block 200 response
         t = threading.Thread(target=self.post_200_code, args=(currency, days, body_dict['response_url'][0]))
         t.daemon = True
         t.start()
@@ -225,7 +238,8 @@ class CommandHandler(BaseHTTPRequestHandler):
             print(f"Given: {given_sig}")
             print(f"Expected: {computed_sig}")
 
-    def send_response_msg(self, url, json_msg, ephemeral=True):
+    @staticmethod
+    def send_response_msg(url, json_msg, ephemeral=True):
         if ephemeral:
             json_msg['response_type'] = "ephemeral"
         else:
@@ -237,7 +251,6 @@ class CommandHandler(BaseHTTPRequestHandler):
     def initial_response(self, message: str = None):
         self.send_response(200)
         self.end_headers()
-        self.flush_headers()
 
         if message is not None:
             self.wfile.write(message.encode())
