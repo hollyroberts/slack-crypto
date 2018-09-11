@@ -43,7 +43,7 @@ class Slack:
         for time_ago in sorted(hour_price_map.keys()):
             price_ago = hour_price_map[time_ago]
 
-            attachments.append(cls.format_stat_new(cur_price, price_ago, currency, time_ago, hours))
+            attachments.append(cls.format_price_entry(cur_price, price_ago, currency, time_ago, hours))
 
         return attachments
 
@@ -55,23 +55,23 @@ class Slack:
         price_7_day = prices[24 * 7]
 
         sign_str = "up" if current_stats.is_diff_positive else "down"
-        attachment_pretext = f"{currency.primary_long}'s price has gone {sign_str}. Current price: {currency.secondary_symbol}{current_stats.cur_price:,.0f}"
+        attachment_pretext = f"{currency.primary_long}'s price has gone {sign_str}. Current price: {currency.secondary_symbol}{cls.format_num(current_stats.cur_price)}"
 
         # noinspection PyListCreation
         attachments = []
 
-        hour_entry = cls.format_stat_new(cur_price, price_1_hour, currency, 1)
+        hour_entry = cls.format_price_entry(cur_price, price_1_hour, currency, 1)
         hour_entry['pretext'] = attachment_pretext
         attachments.append(hour_entry)
-        attachments.append(cls.format_stat_new(cur_price, price_24_hour, currency, 24))
-        attachments.append(cls.format_stat_new(cur_price, price_7_day, currency, 7, False))
+        attachments.append(cls.format_price_entry(cur_price, price_24_hour, currency, 24))
+        attachments.append(cls.format_price_entry(cur_price, price_7_day, currency, 7, False))
 
         # Try to add 28 day stats
         # noinspection PyBroadException
         try:
             cb = Coinbase(currency)
             price_28_days = cb.price_days_ago(28)
-            attachments.append(cls.format_stat_new(cur_price, price_28_days, currency, False))
+            attachments.append(cls.format_price_entry(cur_price, price_28_days, currency, False))
         except Exception as e:
             print(e)
             print("Ignoring error, posting 3 historical prices instead of 4 (28 day price omitted)")
@@ -79,7 +79,7 @@ class Slack:
         return attachments
 
     @classmethod
-    def format_stat_new(cls, cur_price: float, historical_price: float, currency: Currency, units_ago: int, hours=True):
+    def format_price_entry(cls, cur_price: float, historical_price: float, currency: Currency, units_ago: int, hours=True):
         diff = cur_price - historical_price
         diff /= historical_price
         diff *= 100
@@ -100,8 +100,17 @@ class Slack:
         chars_to_pad = 2 * (cls.ATTACHMENT_MIN_WIDTH - len(pretext))
         pretext += " " * chars_to_pad
 
-        text = f"{pretext}{currency.secondary_symbol}{historical_price:,.0f} ({diff:+.2f}%)"
+        text = f"{pretext}{currency.secondary_symbol}{cls.format_num(historical_price)} ({diff:+.2f}%)"
         print(text)
         attachment = {"fallback": "some price changes", "text": text, "color": colour}
 
         return attachment
+
+    @staticmethod
+    def format_num(num: float):
+        if num < 100:
+            return f"{num:,.2f}"
+        if num < 1000:
+            return f"{num:,.1f}"
+        else:
+            return f"{num:,.0f}"

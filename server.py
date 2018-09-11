@@ -97,6 +97,7 @@ class CommandHandler(BaseHTTPRequestHandler):
 
         # Get 0/1/24 hour prices
         minute_prices = cb.get_historical_prices(time_now - timedelta(minutes=60), time_now)
+        print(minute_prices)
         cur_price = minute_prices[0][3]
         price_1_hour = minute_prices[60][3]
         price_24_hour = cb.price_days_ago(1)
@@ -107,7 +108,7 @@ class CommandHandler(BaseHTTPRequestHandler):
             day_prices[day] = cb.price_days_ago(day)
 
         # Create message
-        pretext = f"{currency.primary_long}'s current price is: {currency.secondary_symbol}{cur_price:,.0f}"
+        pretext = f"{currency.primary_long}'s current price is: {currency.secondary_symbol}{Slack.format_num(cur_price)}"
         attachments = Slack.generate_attachments(currency, {1: price_1_hour, 24: price_24_hour}, cur_price, True)
         attachments += Slack.generate_attachments(currency, day_prices, cur_price, False)
         attachments[0]['pretext'] = pretext
