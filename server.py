@@ -173,7 +173,7 @@ class CommandHandler(BaseHTTPRequestHandler):
         return currency, days
 
     def help_message(self, body_dict: dict):
-        text = body_dict.get("text", "")[0].lower()
+        text = body_dict.get("text", [""])[0].lower()
         if not(text == "h" or text == "help"):
             return False
 
