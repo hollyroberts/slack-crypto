@@ -88,27 +88,29 @@ class Server(BaseHTTPRequestHandler):
 
         # Get currency info
         if num_str_args == 1:
-            crypto, fiat = self.parse_currency_args_1(messages[0])
+            currency = self.parse_currency_args_1(messages[0])
         elif num_str_args == 2:
-            crypto, fiat = self.parse_currency_args_2(messages)
+            currency = self.parse_currency_args_2(messages)
         else:
-            crypto, fiat = Currencies.PRIMARY_CURRENCY, Currencies.SECONDARY_CURRENCY
+            currency = Currency(Currencies.PRIMARY_CURRENCY, Currencies.SECONDARY_CURRENCY)
 
         # Extract, order, remove duplicate days, and remove days < 2
         days = list(int(d) for d in messages[num_str_args:] if int(d) >= 2)
         days = sorted(set(days))
 
-        return crypto, fiat, days
+        return currency, days
 
     @staticmethod
     def parse_currency_args_1(message: str):
+        # Is arg crypto?
         crypto = Currencies.get_map_match(Currencies.CRYPTO_MAP, message)
         if crypto is not None:
-            return crypto, Currencies.SECONDARY_CURRENCY
+            return Currency(crypto, Currencies.SECONDARY_CURRENCY)
 
+        # Is arg fiat?
         fiat = Currencies.get_map_match(Currencies.FIAT_MAP, message)
         if fiat is not None:
-            return Currencies.PRIMARY_CURRENCY, fiat
+            return Currency(Currencies.PRIMARY_CURRENCY, fiat)
 
         raise ParseError("Could not parse first argument to cryptocurrency or fiat currency")
 
@@ -121,7 +123,7 @@ class Server(BaseHTTPRequestHandler):
             if fiat is None:
                 raise ParseError("First argument was a cryptocurrency, but second argument was not a fiat currency")
 
-            return crypto, fiat
+            return Currency(crypto, fiat)
 
         # Try fiat being first
         fiat = Currencies.get_map_match(Currencies.FIAT_MAP, message[0])
@@ -130,7 +132,7 @@ class Server(BaseHTTPRequestHandler):
             if crypto is None:
                 raise ParseError("First argument was a fiat currency, but second argument was not a cryptocurrency")
 
-            return crypto, fiat
+            return Currency(crypto, fiat)
 
     """Checks that message was from slack and has headers we expect"""
     def basic_header_verification(self):
