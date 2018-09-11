@@ -48,6 +48,8 @@ class Server(BaseHTTPRequestHandler):
         crypto, fiat, days = self.parse_args(body_dict)
         fiat_symbol = Currency.FIAT_SYMBOL_MAP[fiat]
 
+        print(f"{crypto} {fiat} {fiat_symbol} {days}")
+
         # Send 200
         print("Sending initial 200 response")
         self.send_response(200)
@@ -103,15 +105,23 @@ class Server(BaseHTTPRequestHandler):
 
     @staticmethod
     def parse_currency_args_2(message: list):
+        # Try crypto being first
         crypto = Currency.get_map_match(Currency.CRYPTO_MAP, message[0])
-        if crypto is None:
-            raise ParseError("Could not parse first argument as cryptocurrency")
+        if crypto is not None:
+            fiat = Currency.get_map_match(Currency.FIAT_MAP, message[1])
+            if fiat is None:
+                raise ParseError("First argument was a cryptocurrency, but second argument was not a fiat currency")
 
-        fiat = Currency.get_map_match(Currency.FIAT_MAP, message[1])
-        if fiat is None:
-            raise ParseError("Could not parse second argument as fiat currency")
+            return crypto, fiat
 
-        return crypto, fiat
+        # Try fiat being first
+        fiat = Currency.get_map_match(Currency.FIAT_MAP, message[0])
+        if fiat is not None:
+            crypto = Currency.get_map_match(Currency.CRYPTO_MAP, message[1])
+            if crypto is None:
+                raise ParseError("First argument was a fiat currency, but second argument was not a cryptocurrency")
+
+            return crypto, fiat
 
     """Checks that message was from slack and has headers we expect"""
     def basic_header_verification(self):
