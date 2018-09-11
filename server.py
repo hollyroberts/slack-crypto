@@ -56,12 +56,12 @@ class Server(BaseHTTPRequestHandler):
 
         # Send 200
         print("Sending initial 200 response")
-        self.send_response(200)
+        self.reply()
 
     def parse_args(self, body_dict: dict):
         # Default values
         print("Parsing args")
-        messages = body_dict['text'][0]
+        messages = body_dict.get('text', [''])[0]
         messages = shlex.split(messages)
 
         # Work out which args are what
