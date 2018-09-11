@@ -3,8 +3,9 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 import urllib.parse as urlparse
 import hmac
 import time
-from coinbase import Currency
+from coinbase import Currencies
 import shlex
+from slack import Slack
 
 class Server(BaseHTTPRequestHandler):
     # Seconds to allow for timestamp mismatch
@@ -91,7 +92,7 @@ class Server(BaseHTTPRequestHandler):
         elif num_str_args == 2:
             crypto, fiat = self.parse_currency_args_2(messages)
         else:
-            crypto, fiat = Currency.PRIMARY_CURRENCY, Currency.SECONDARY_CURRENCY
+            crypto, fiat = Currencies.PRIMARY_CURRENCY, Currencies.SECONDARY_CURRENCY
 
         # Extract, order, remove duplicate days, and remove days < 2
         days = list(int(d) for d in messages[num_str_args:] if int(d) >= 2)
@@ -101,31 +102,31 @@ class Server(BaseHTTPRequestHandler):
 
     @staticmethod
     def parse_currency_args_1(message: str):
-        crypto = Currency.get_map_match(Currency.CRYPTO_MAP, message)
+        crypto = Currencies.get_map_match(Currencies.CRYPTO_MAP, message)
         if crypto is not None:
-            return crypto, Currency.SECONDARY_CURRENCY
+            return crypto, Currencies.SECONDARY_CURRENCY
 
-        fiat = Currency.get_map_match(Currency.FIAT_MAP, message)
+        fiat = Currencies.get_map_match(Currencies.FIAT_MAP, message)
         if fiat is not None:
-            return Currency.PRIMARY_CURRENCY, fiat
+            return Currencies.PRIMARY_CURRENCY, fiat
 
         raise ParseError("Could not parse first argument to cryptocurrency or fiat currency")
 
     @staticmethod
     def parse_currency_args_2(message: list):
         # Try crypto being first
-        crypto = Currency.get_map_match(Currency.CRYPTO_MAP, message[0])
+        crypto = Currencies.get_map_match(Currencies.CRYPTO_MAP, message[0])
         if crypto is not None:
-            fiat = Currency.get_map_match(Currency.FIAT_MAP, message[1])
+            fiat = Currencies.get_map_match(Currencies.FIAT_MAP, message[1])
             if fiat is None:
                 raise ParseError("First argument was a cryptocurrency, but second argument was not a fiat currency")
 
             return crypto, fiat
 
         # Try fiat being first
-        fiat = Currency.get_map_match(Currency.FIAT_MAP, message[0])
+        fiat = Currencies.get_map_match(Currencies.FIAT_MAP, message[0])
         if fiat is not None:
-            crypto = Currency.get_map_match(Currency.CRYPTO_MAP, message[1])
+            crypto = Currencies.get_map_match(Currencies.CRYPTO_MAP, message[1])
             if crypto is None:
                 raise ParseError("First argument was a fiat currency, but second argument was not a cryptocurrency")
 

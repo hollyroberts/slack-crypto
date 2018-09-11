@@ -60,7 +60,7 @@ class Coinbase:
         historical_time = historical_data[0][0]
         historical_price = historical_data[0][3]
 
-        print(f"Price {days} days ago was {Currency.SECONDARY_CURRENCY_SYMBOL}{historical_price} (exact time: " + datetime.fromtimestamp(historical_time).strftime("%d/%m/%Y - %H:%M") + ")")
+        print(f"Price {days} days ago was {Currencies.SECONDARY_CURRENCY_SYMBOL}{historical_price} (exact time: " + datetime.fromtimestamp(historical_time).strftime("%d/%m/%Y - %H:%M") + ")")
         return historical_price
 
     """Retrieve the un filtered results from coinbase according to the interval"""
@@ -96,7 +96,7 @@ class Coinbase:
             "granularity": granularity
         }
 
-        json_text = cls.__get_request(f"{cls.API_URL}/products/{Currency.CURRENCY_PAIR}/candles", params=params)
+        json_text = cls.__get_request(f"{cls.API_URL}/products/{Currencies.CURRENCY_PAIR}/candles", params=params)
         return json.loads(json_text)
 
     @staticmethod
@@ -114,7 +114,7 @@ class Coinbase:
             else:
                 return resp.text
 
-class Currency:
+class Currencies:
     PRIMARY_CURRENCY = "BTC"
     PRIMARY_CURRENCY_LONG = "Bitcoin"
     SECONDARY_CURRENCY = "USD"

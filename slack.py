@@ -1,7 +1,7 @@
 import requests
 import json
 
-from coinbase import Currency, Coinbase
+from coinbase import Currencies, Coinbase
 from stats import HourData
 from constants import SlackColourThresholds
 
@@ -41,7 +41,7 @@ class Slack:
         stats_7_day = HourData(prices, ema, 24 * 7)
 
         sign_str = "up" if current_stats.is_diff_positive else "down"
-        attachment_pretext = f"{Currency.PRIMARY_CURRENCY_LONG}'s price has gone {sign_str}. Current price: {Currency.SECONDARY_CURRENCY_SYMBOL}{current_stats.cur_price:,.0f}"
+        attachment_pretext = f"{Currencies.PRIMARY_CURRENCY_LONG}'s price has gone {sign_str}. Current price: {Currencies.SECONDARY_CURRENCY_SYMBOL}{current_stats.cur_price:,.0f}"
 
         # noinspection PyListCreation
         attachments = []
@@ -79,7 +79,7 @@ class Slack:
         else:
             colour = "danger"
 
-        text = f"{text_pretext}{Currency.SECONDARY_CURRENCY_SYMBOL}{historical_price:,.0f} ({diff:+.2f}%)"
+        text = f"{text_pretext}{Currencies.SECONDARY_CURRENCY_SYMBOL}{historical_price:,.0f} ({diff:+.2f}%)"
         attachment = {"fallback": "some price changes", "text": text, "color": colour}
         if pretext is not None:
             attachment['pretext'] = pretext
