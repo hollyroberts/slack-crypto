@@ -49,14 +49,14 @@ class Currencies:
         return None
 
 class Currency:
-    def __init__(self, primary: str, secondary: str):
-        self.primary = primary
-        self.primary_long = Currencies.CRYPTO_MAP[primary][0]
+    def __init__(self, crypto: str, fiat: str):
+        self.crypto = crypto
+        self.crypto_long = Currencies.CRYPTO_MAP[crypto][0]
 
-        self.secondary = secondary
-        self.secondary_symbol = Currencies.FIAT_SYMBOL_MAP[secondary]
+        self.fiat = fiat
+        self.fiat_symbol = Currencies.FIAT_SYMBOL_MAP[fiat]
 
-        self.pair = f"{primary}-{secondary}"
+        self.pair = f"{crypto}-{fiat}"
 
 class Coinbase:
     API_URL = "https://api.pro.coinbase.com"
@@ -111,7 +111,7 @@ class Coinbase:
         historical_time = historical_data[0][0]
         historical_price = historical_data[0][3]
 
-        print(f"Price {days} days ago was {self.currency.secondary_symbol}{historical_price} (exact time: " + datetime.fromtimestamp(historical_time).strftime("%d/%m/%Y - %H:%M") + ")")
+        print(f"Price {days} days ago was {self.currency.fiat_symbol}{historical_price} (exact time: " + datetime.fromtimestamp(historical_time).strftime("%d/%m/%Y - %H:%M") + ")")
         return historical_price
 
     """Retrieve the un filtered results from coinbase according to the interval"""

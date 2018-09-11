@@ -55,7 +55,7 @@ class Slack:
         price_7_day = prices[24 * 7]
 
         sign_str = "up" if current_stats.is_diff_positive else "down"
-        attachment_pretext = f"{currency.primary_long}'s price has gone {sign_str}. Current price: {currency.secondary_symbol}{cls.format_num(current_stats.cur_price)}"
+        attachment_pretext = f"{currency.crypto_long}'s price has gone {sign_str}. Current price: {currency.fiat_symbol}{cls.format_num(current_stats.cur_price)}"
 
         # noinspection PyListCreation
         attachments = []
@@ -100,7 +100,7 @@ class Slack:
         chars_to_pad = 2 * (cls.ATTACHMENT_MIN_WIDTH - len(pretext))
         pretext += " " * chars_to_pad
 
-        text = f"{pretext}{currency.secondary_symbol}{cls.format_num(historical_price)} ({diff:+.2f}%)"
+        text = f"{pretext}{currency.fiat_symbol}{cls.format_num(historical_price)} ({diff:+.2f}%)"
         print(text)
         attachment = {"fallback": "some price changes", "text": text, "color": colour}
 

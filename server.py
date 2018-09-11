@@ -71,7 +71,7 @@ class CommandHandler(BaseHTTPRequestHandler):
         resp = []
         if len(days) > 2:
             resp.append(f"Retrieving data for {len(days)} days, this may take a few seconds")
-        if currency.secondary == "GBP" and currency.primary != "BTC":
+        if currency.fiat == "GBP" and currency.crypto != "BTC":
             resp.append("The GBP currency has only just been added for certain trading pairs, manually reduce the days to retrieve (otherwise this command will fail)")
         self.initial_response('\n'.join(resp))
 
@@ -108,7 +108,7 @@ class CommandHandler(BaseHTTPRequestHandler):
             day_prices[day] = cb.price_days_ago(day)
 
         # Create message
-        pretext = f"{currency.primary_long}'s current price is: {currency.secondary_symbol}{Slack.format_num(cur_price)}"
+        pretext = f"{currency.crypto_long}'s current price is: {currency.fiat_symbol}{Slack.format_num(cur_price)}"
         attachments = Slack.generate_attachments(currency, {1: price_1_hour, 24: price_24_hour}, cur_price, True)
         attachments += Slack.generate_attachments(currency, day_prices, cur_price, False)
         attachments[0]['pretext'] = pretext
