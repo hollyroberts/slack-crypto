@@ -46,10 +46,13 @@ class Server(BaseHTTPRequestHandler):
             return
 
         # Parse args
-        crypto, fiat, days = self.parse_args(body_dict)
+        try:
+            crypto, fiat, days = self.parse_args(body_dict)
+        except ParseError as e:
+            print(f"Parse error: {e}")
+            self.reply(f"Parse error: {e}")
+            return
         fiat_symbol = Currency.FIAT_SYMBOL_MAP[fiat]
-
-        print(f"{crypto} {fiat} {fiat_symbol} {days}")
 
         # Send 200
         print("Sending initial 200 response")
@@ -175,6 +178,14 @@ class Server(BaseHTTPRequestHandler):
             print("Signatures don't match")
             print(f"Given: {given_sig}")
             print(f"Expected: {computed_sig}")
+
+    """Send message back"""
+    def reply(self, message: str = None):
+        self.send_response(200)
+        self.end_headers()
+
+        if message is not None:
+            self.wfile.write(message.encode())
 
     """Debug method to print body contents received"""
     @staticmethod
