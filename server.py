@@ -82,11 +82,11 @@ class Server(BaseHTTPRequestHandler):
         if num_str_args == 1:
             crypto, fiat = self.parse_currency_args_1(messages[0])
         elif num_str_args == 2:
-            crypto, fiat = self.parse_currency_args_2(messages[0])
+            crypto, fiat = self.parse_currency_args_2(messages)
         else:
             crypto, fiat = Currency.PRIMARY_CURRENCY, Currency.SECONDARY_CURRENCY
 
-        days = (int(d) for d in messages[num_str_args:])
+        days = list(int(d) for d in messages[num_str_args:])
         return crypto, fiat, days
 
     @staticmethod
