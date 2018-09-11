@@ -3,7 +3,7 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 import urllib.parse as urlparse
 import hmac
 import time
-from coinbase import Currencies
+from coinbase import Currencies, Currency
 import shlex
 from slack import Slack
 
@@ -35,11 +35,9 @@ class Server(BaseHTTPRequestHandler):
             self.send_error(400)
             return
 
-        # Get body data
+        # Get and parse body data
         content_length = int(self.headers.get('Content-Length', 0))
         body_data = self.rfile.read(content_length).decode("utf-8")
-
-        # Parse body data
         body_dict = urlparse.parse_qs(body_data)
 
         if not self.verify_signature(body_data):
@@ -48,16 +46,20 @@ class Server(BaseHTTPRequestHandler):
 
         # Parse args
         try:
-            crypto, fiat, days = self.parse_args(body_dict)
+            currency, days = self.parse_args(body_dict)
         except ParseError as e:
             print(f"Parse error: {e}")
             self.reply(f"Parse error: {e}")
             return
-        fiat_symbol = Currency.FIAT_SYMBOL_MAP[fiat]
 
         # Send 200
         print("Sending initial 200 response")
         self.reply()
+
+        # Get prices
+
+        # Get attachment and send
+        attachments = Slack.generate_post(prices, stats, EMA_NUM_HOURS)
 
     def parse_args(self, body_dict: dict):
         # Default values

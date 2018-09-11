@@ -1,11 +1,13 @@
 import requests
 import json
 
-from coinbase import Currencies, Coinbase
+from coinbase import Currencies, Currency, Coinbase
 from stats import HourData
 from constants import SlackColourThresholds
 
 class Slack:
+    ATTACHMENT_MIN_WIDTH = 23
+
     @classmethod
     def post_to_slack(cls, name: str, icon_url: str, text: str, attachments: list, slack_url: str, channel=""):
         slack_data = {"username": name, "icon_url": icon_url, "text": text, "attachments": attachments, "channel": channel}
@@ -35,25 +37,43 @@ class Slack:
         print(slack_data)
 
     @classmethod
-    def generate_attachment(cls, prices: list, current_stats: HourData, ema: int):
-        stats_1_hour = HourData(prices, ema, 1)
-        stats_24_hour = HourData(prices, ema, 24)
-        stats_7_day = HourData(prices, ema, 24 * 7)
+    def generate_attachments(cls, currency: Currency, hour_price_map: dict, cur_price: float, hours):
+        attachments = []
+
+        for hour in hour_price_map:
+            price_ago = hour_price_map[hour]
+            time_ago = hour if hours else hour // 24
+
+            attachments.append(cls.format_stat_new(cur_price, price_ago, currency, time_ago))
+
+        return attachments
+
+    @classmethod
+    def generate_post(cls, prices: list, current_stats: HourData, ema: int):
+        cur_price = current_stats.cur_price
+        price_1_hour = prices[1]
+        price_24_hour = prices[24]
+        price_7_day = prices[24 * 7]
+
+        currency = Currency(Currencies.PRIMARY_CURRENCY, Currencies.SECONDARY_CURRENCY)
 
         sign_str = "up" if current_stats.is_diff_positive else "down"
         attachment_pretext = f"{Currencies.PRIMARY_CURRENCY_LONG}'s price has gone {sign_str}. Current price: {Currencies.SECONDARY_CURRENCY_SYMBOL}{current_stats.cur_price:,.0f}"
 
         # noinspection PyListCreation
         attachments = []
-        attachments.append(cls.format_stat_wrapper(stats_1_hour, current_stats, "Price 1 hour ago:      ", attachment_pretext))
-        attachments.append(cls.format_stat_wrapper(stats_24_hour, current_stats, "Price 24 hours ago:  "))
-        attachments.append(cls.format_stat_wrapper(stats_7_day, current_stats, "Price 7 days ago:      "))
+
+        hour_entry = cls.format_stat_new(cur_price, price_1_hour, currency, 1)
+        hour_entry['pretext'] = attachment_pretext
+        attachments.append(hour_entry)
+        attachments.append(cls.format_stat_new(cur_price, price_24_hour, currency, 24))
+        attachments.append(cls.format_stat_new(cur_price, price_7_day, currency, 7, False))
 
         # Try to add 28 day stats
         # noinspection PyBroadException
         try:
             price_28_days = Coinbase.price_days_ago(28)
-            attachments.append(cls.format_stat(price_28_days, current_stats.cur_price, "Price 28 days ago:     "))
+            attachments.append(cls.format_stat_new(cur_price, price_28_days, currency, False))
         except Exception as e:
             print(e)
             print("Ignoring error, posting 3 historical prices instead of 4 (28 day price omitted)")
@@ -61,11 +81,7 @@ class Slack:
         return attachments
 
     @classmethod
-    def format_stat_wrapper(cls, stat: HourData, stats: HourData, text_pretext: str, pretext=None):
-        return cls.format_stat(stat.cur_price, stats.cur_price, text_pretext, pretext)
-
-    @staticmethod
-    def format_stat(historical_price, cur_price, text_pretext: str, pretext=None):
+    def format_stat_new(cls, cur_price: float, historical_price: float, currency: Currency, units_ago: int, hours=True):
         diff = cur_price - historical_price
         diff /= historical_price
         diff *= 100
@@ -79,9 +95,10 @@ class Slack:
         else:
             colour = "danger"
 
-        text = f"{text_pretext}{Currencies.SECONDARY_CURRENCY_SYMBOL}{historical_price:,.0f} ({diff:+.2f}%)"
+        time_unit = "hours" if hours else "days"
+        pretext = f"Price {units_ago} {time_unit} ago:"
+
+        text = f"{pretext:<{cls.ATTACHMENT_MIN_WIDTH}}{currency.secondary_symbol}{historical_price:,.0f} ({diff:+.2f}%)"
         attachment = {"fallback": "some price changes", "text": text, "color": colour}
-        if pretext is not None:
-            attachment['pretext'] = pretext
 
         return attachment
