@@ -110,7 +110,7 @@ class Coinbase:
                 continue
             elif resp.status_code != 200:
                 print("API error - Response code was not 200 or 429")
-                sys.exit(-1)
+                raise IOError("Code not 200")
             else:
                 return resp.text
 

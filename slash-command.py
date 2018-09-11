@@ -1,10 +1,8 @@
 import argparse
-from server import Server
+from server import CommandHandler
 
 # region Argparse
 parser = argparse.ArgumentParser(description="Post messages to slack if a cryptocurrency has changed price significantly")
-parser.add_argument("webhook url",
-                    help="Slack incoming webhook URL")
 parser.add_argument("signing secret",
                     help="Slack signing secret")
 parser.add_argument("--port", "-p", default=80, type=int,
@@ -12,5 +10,5 @@ parser.add_argument("--port", "-p", default=80, type=int,
 args = parser.parse_args()
 # endregion
 
-Server.SIGNING_SECRET = getattr(args, "signing secret")
-Server.run(args.port)
+CommandHandler.SIGNING_SECRET = getattr(args, "signing secret")
+CommandHandler.run(args.port)

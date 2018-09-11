@@ -68,7 +68,7 @@ if not Analysis.should_post(history, stats, prices, EMA_THRESHOLD_PERCENT):
     sys.exit(1)
 
 print("Message should be posted, generating attachment")
-attachments = Slack.generate_post(prices, stats, EMA_NUM_HOURS)
+attachments = Slack.generate_post(prices, stats)
 image_url = SlackImages.get_image(stats.is_diff_positive)
 print("Posting to slack")
 Slack.post_to_slack(BOT_NAME, image_url, "", attachments, SLACK_URL, SLACK_CHANNEL)

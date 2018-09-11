@@ -7,8 +7,10 @@ from coinbase import Coinbase, Currencies, Currency
 import shlex
 from slack import Slack
 from datetime import datetime, timedelta
+import requests
+import json
 
-class Server(BaseHTTPRequestHandler):
+class CommandHandler(BaseHTTPRequestHandler):
     # Seconds to allow for timestamp mismatch
     # SHA-256 should be secure enough to set it to 5 minutes (value given in docs)
     REPLAY_PREVENTION = 300
@@ -27,6 +29,10 @@ class Server(BaseHTTPRequestHandler):
         REQ_TS: None
     }
 
+    def __init__(self, request, client_address, server):
+        super().__init__(request, client_address, server)
+        self.response_url = ''
+
     # POST is for submitting data.
     # noinspection PyPep8Naming
     def do_POST(self):
@@ -40,6 +46,7 @@ class Server(BaseHTTPRequestHandler):
         content_length = int(self.headers.get('Content-Length', 0))
         body_data = self.rfile.read(content_length).decode("utf-8")
         body_dict = urlparse.parse_qs(body_data)
+        self.response_url = body_dict['response_url'][0]
 
         if not self.verify_signature(body_data):
             self.send_error(401)
@@ -50,18 +57,27 @@ class Server(BaseHTTPRequestHandler):
             currency, days = self.parse_args(body_dict)
         except ParseError as e:
             print(f"Parse error: {e}")
-            self.reply(f"Parse error: {e}")
+            self.initial_response(f"Parse error: {e}")
             return
 
         # Send 200
         print("Sending initial 200 response")
-        self.reply()
+        self.initial_response()
 
         # Get prices and attachment from prices
-        slack_msg = self.create_slack_msg(currency, days)
+        try:
+            slack_attachments = self.create_slack_attachments(currency, days)
+        except IOError as e:
+            print(e)
+            self.send_response_msg({"text": "Error retrieving data, please try again later (or complain at blackened)"})
+            return
+
+        # Post to slack
+        print("Posting to slack")
+        self.send_response_msg({"attachments": slack_attachments}, ephemeral=False)
 
     @staticmethod
-    def create_slack_msg(currency: Currency, days: list):
+    def create_slack_attachments(currency: Currency, days: list):
         time_now = datetime.utcnow()
 
         # Get 0/1/24 hour prices
@@ -81,9 +97,7 @@ class Server(BaseHTTPRequestHandler):
         attachments += Slack.generate_attachments(currency, day_prices, cur_price, False)
         attachments[0]['pretext'] = pretext
 
-        print(attachments)
-        # Get day prices
-        return
+        return attachments
 
     def parse_args(self, body_dict: dict):
         # Default values
@@ -210,10 +224,19 @@ class Server(BaseHTTPRequestHandler):
             print(f"Given: {given_sig}")
             print(f"Expected: {computed_sig}")
 
-    """Send message back"""
-    def reply(self, message: str = None):
+    def send_response_msg(self, json_msg, ephemeral=True):
+        if ephemeral:
+            json_msg['response_type'] = "ephemeral"
+        else:
+            json_msg['response_type'] = "in_channel"
+
+        print(json_msg)
+        requests.post(self.response_url, data=json.dumps(json_msg), headers={"content-type": "application/json"})
+
+    """Send 200 message back"""
+    def initial_response(self, message: str = None):
         self.send_response(200)
-        self.end_headers()
+        self.flush_headers()
 
         if message is not None:
             self.wfile.write(message.encode())
@@ -226,7 +249,7 @@ class Server(BaseHTTPRequestHandler):
 
     @staticmethod
     def run(port):
-        server = HTTPServer(('', port), Server)
+        server = HTTPServer(('', port), CommandHandler)
         print(f"Web server started on port {port}")
         server.serve_forever()
 
