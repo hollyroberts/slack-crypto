@@ -230,7 +230,6 @@ class CommandHandler(BaseHTTPRequestHandler):
         else:
             json_msg['response_type'] = "in_channel"
 
-        print(json_msg)
         requests.post(self.response_url, data=json.dumps(json_msg), headers={"content-type": "application/json"})
 
     """Send 200 message back"""

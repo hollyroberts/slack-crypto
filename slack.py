@@ -6,7 +6,7 @@ from stats import HourData
 from constants import SlackColourThresholds
 
 class Slack:
-    ATTACHMENT_MIN_WIDTH = 23
+    ATTACHMENT_MIN_WIDTH = 21
 
     @classmethod
     def post_to_slack(cls, name: str, icon_url: str, text: str, attachments: list, slack_url: str, channel=""):
@@ -98,8 +98,11 @@ class Slack:
         if units_ago != 1:
             time_unit += "s"
         pretext = f"Price {units_ago} {time_unit} ago:"
+        chars_to_pad = 2 * (cls.ATTACHMENT_MIN_WIDTH - len(pretext))
+        pretext += " " * chars_to_pad
 
-        text = f"{pretext:<{cls.ATTACHMENT_MIN_WIDTH}}{currency.secondary_symbol}{historical_price:,.0f} ({diff:+.2f}%)"
+        text = f"{pretext}{currency.secondary_symbol}{historical_price:,.0f} ({diff:+.2f}%)"
+        print(text)
         attachment = {"fallback": "some price changes", "text": text, "color": colour}
 
         return attachment
