@@ -4,6 +4,7 @@ import urllib.parse as urlparse
 import hmac
 import time
 from coinbase import Currency
+import shlex
 
 class Server(BaseHTTPRequestHandler):
     # Seconds to allow for timestamp mismatch
@@ -57,7 +58,8 @@ class Server(BaseHTTPRequestHandler):
     def parse_args(self, body_dict: dict):
         # Default values
         print("Parsing args")
-        messages = body_dict['text'][0].split()
+        messages = body_dict['text'][0]
+        messages = shlex.split(messages)
 
         # Work out which args are what
         num_str_args = 0

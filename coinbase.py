@@ -132,8 +132,8 @@ class Currency:
 
     FIAT_MAP = {
         "EUR": ["Euro", "Euros"],
-        "GBP": ["Pound", "Pounds", "Sterling"],
-        "USD": ["Dollar", "Dollars"]
+        "GBP": ["Pound", "Pounds", "Sterling", "Great British Pounds"],
+        "USD": ["Dollar", "Dollars", "Freedom Money", "Buck", "Bucks"]
     }
 
     FIAT_SYMBOL_MAP = {
