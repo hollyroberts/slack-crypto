@@ -137,7 +137,25 @@ class Coinbase:
 
         return historical_data
 
-    """Get historical prices from coinbase unaltered"""
+    """Get prices closest to the times given, but they cannot be later"""
+    def get_prices_closest_to_time(self, *args: datetime):
+        earliest = min(args)
+        latest = max(args)
+
+        # Map response to ordered list of time -> price
+        response = self.get_historical_prices(earliest, latest)
+        time_prices = ((datetime.utcfromtimestamp(entry[0]), entry[3]) for entry in response)
+        time_prices = sorted(time_prices, key=lambda x: x[0])
+
+        prices = []
+        for required_time in args:
+            closest_floor = max(entry for entry in time_prices if entry[0] < required_time)
+            prices.append(closest_floor[1])
+
+        return tuple(prices)
+
+    """Get historical prices from coinbase unaltered
+    Date objects must be UTC"""
     def get_historical_prices(self, start: datetime, end: datetime):
         params = {
             "start": start.isoformat(),
