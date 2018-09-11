@@ -3,9 +3,10 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 import urllib.parse as urlparse
 import hmac
 import time
-from coinbase import Currencies, Currency
+from coinbase import Coinbase, Currencies, Currency
 import shlex
 from slack import Slack
+from datetime import datetime, timedelta
 
 class Server(BaseHTTPRequestHandler):
     # Seconds to allow for timestamp mismatch
@@ -56,10 +57,33 @@ class Server(BaseHTTPRequestHandler):
         print("Sending initial 200 response")
         self.reply()
 
-        # Get prices
+        # Get prices and attachment from prices
+        slack_msg = self.create_slack_msg(currency, days)
 
-        # Get attachment and send
-        attachments = Slack.generate_post(prices, stats, EMA_NUM_HOURS)
+    @staticmethod
+    def create_slack_msg(currency: Currency, days: list):
+        time_now = datetime.utcnow()
+
+        # Get 0/1/24 hour prices
+        minute_prices = Coinbase.get_historical_prices(time_now - timedelta(minutes=60), time_now, granularity=60)
+        cur_price = minute_prices[0][3]
+        price_1_hour = minute_prices[60][3]
+        price_24_hour = Coinbase.price_days_ago(1)
+
+        # Get day prices
+        day_prices = {}
+        for day in days:
+            day_prices[day] = Coinbase.price_days_ago(day)
+
+        # Create message
+        pretext = f"{currency.primary_long}'s current price is: {currency.secondary_symbol}{cur_price:,.0f}"
+        attachments = Slack.generate_attachments(currency, {1: price_1_hour, 24: price_24_hour}, cur_price, True)
+        attachments += Slack.generate_attachments(currency, day_prices, cur_price, False)
+        attachments[0]['pretext'] = pretext
+
+        print(attachments)
+        # Get day prices
+        return
 
     def parse_args(self, body_dict: dict):
         # Default values
@@ -98,6 +122,8 @@ class Server(BaseHTTPRequestHandler):
 
         # Extract, order, remove duplicate days, and remove days < 2
         days = list(int(d) for d in messages[num_str_args:] if int(d) >= 2)
+        if len(days) == 0:
+            days = [7, 28]
         days = sorted(set(days))
 
         return currency, days

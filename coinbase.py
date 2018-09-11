@@ -56,7 +56,7 @@ class Coinbase:
     def price_days_ago(cls, days: int):
         time_ago = datetime.utcnow() - timedelta(days=days)
 
-        historical_data = cls.__get_historical_prices(time_ago - timedelta(minutes=1), time_ago, cls.SECS_IN_MINUTE)
+        historical_data = cls.get_historical_prices(time_ago - timedelta(minutes=1), time_ago, cls.SECS_IN_MINUTE)
         historical_time = historical_data[0][0]
         historical_price = historical_data[0][3]
 
@@ -76,7 +76,7 @@ class Coinbase:
         # Send request
         print(f"Retrieving data from coinbase (interval {self.interval} mins)")
         for i in range(round(self.MINS_IN_HOUR / self.interval)):
-            historical_data += self.__get_historical_prices(time_start, time_end, granularity)
+            historical_data += self.get_historical_prices(time_start, time_end, granularity)
 
             time_end -= time_delta
             time_start -= time_delta
@@ -89,7 +89,7 @@ class Coinbase:
 
     """Get historical prices from coinbase unaltered"""
     @classmethod
-    def __get_historical_prices(cls, start: datetime, end: datetime, granularity: int):
+    def get_historical_prices(cls, start: datetime, end: datetime, granularity: int):
         params = {
             "start": start.isoformat(),
             "end": end.isoformat(),

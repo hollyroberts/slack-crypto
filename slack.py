@@ -40,16 +40,15 @@ class Slack:
     def generate_attachments(cls, currency: Currency, hour_price_map: dict, cur_price: float, hours):
         attachments = []
 
-        for hour in hour_price_map:
-            price_ago = hour_price_map[hour]
-            time_ago = hour if hours else hour // 24
+        for time_ago in sorted(hour_price_map.keys()):
+            price_ago = hour_price_map[time_ago]
 
-            attachments.append(cls.format_stat_new(cur_price, price_ago, currency, time_ago))
+            attachments.append(cls.format_stat_new(cur_price, price_ago, currency, time_ago, hours))
 
         return attachments
 
     @classmethod
-    def generate_post(cls, prices: list, current_stats: HourData, ema: int):
+    def generate_post(cls, prices: list, current_stats: HourData):
         cur_price = current_stats.cur_price
         price_1_hour = prices[1]
         price_24_hour = prices[24]
@@ -95,7 +94,9 @@ class Slack:
         else:
             colour = "danger"
 
-        time_unit = "hours" if hours else "days"
+        time_unit = "hour" if hours else "day"
+        if units_ago != 1:
+            time_unit += "s"
         pretext = f"Price {units_ago} {time_unit} ago:"
 
         text = f"{pretext:<{cls.ATTACHMENT_MIN_WIDTH}}{currency.secondary_symbol}{historical_price:,.0f} ({diff:+.2f}%)"
