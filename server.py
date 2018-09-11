@@ -91,7 +91,7 @@ class Server(BaseHTTPRequestHandler):
             crypto, fiat = Currency.PRIMARY_CURRENCY, Currency.SECONDARY_CURRENCY
 
         # Extract, order, remove duplicate days, and remove days < 2
-        days = list(int(d) for d in messages[num_str_args:] if d >= 2)
+        days = list(int(d) for d in messages[num_str_args:] if int(d) >= 2)
         days = sorted(set(days))
 
         return crypto, fiat, days
