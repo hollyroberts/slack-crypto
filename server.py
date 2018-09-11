@@ -45,7 +45,8 @@ class Server(BaseHTTPRequestHandler):
             return
 
         # Parse args
-        self.parse_args(body_dict)
+        crypto, fiat, days = self.parse_args(body_dict)
+        fiat_symbol = Currency.FIAT_SYMBOL_MAP[fiat]
 
         # Send 200
         print("Sending initial 200 response")
@@ -79,24 +80,24 @@ class Server(BaseHTTPRequestHandler):
 
         # Get currency info
         if num_str_args == 1:
-            crypto, fiat, fiat_symbol = self.parse_currency_args_1(messages[0])
+            crypto, fiat = self.parse_currency_args_1(messages[0])
         elif num_str_args == 2:
-            crypto, fiat, fiat_symbol = self.parse_currency_args_1(messages[0])
+            crypto, fiat = self.parse_currency_args_2(messages[0])
         else:
-            crypto, fiat, fiat_symbol = Currency.PRIMARY_CURRENCY, Currency.SECONDARY_CURRENCY, Currency.SECONDARY_CURRENCY_SYMBOL
+            crypto, fiat = Currency.PRIMARY_CURRENCY, Currency.SECONDARY_CURRENCY
 
         days = (int(d) for d in messages[num_str_args:])
-        return crypto, fiat, fiat_symbol, days
+        return crypto, fiat, days
 
     @staticmethod
     def parse_currency_args_1(message: str):
         crypto = Currency.get_map_match(Currency.CRYPTO_MAP, message)
         if crypto is not None:
-            return crypto, Currency.SECONDARY_CURRENCY, Currency.SECONDARY_CURRENCY_SYMBOL
+            return crypto, Currency.SECONDARY_CURRENCY
 
         fiat = Currency.get_map_match(Currency.FIAT_MAP, message)
         if fiat is not None:
-            return Currency.PRIMARY_CURRENCY, fiat, Currency.FIAT_SYMBOL_MAP[fiat]
+            return Currency.PRIMARY_CURRENCY, fiat
 
         raise ParseError("Could not parse first argument to cryptocurrency or fiat currency")
 
@@ -110,7 +111,7 @@ class Server(BaseHTTPRequestHandler):
         if fiat is None:
             raise ParseError("Could not parse second argument as fiat currency")
 
-        return crypto, fiat, Currency.FIAT_SYMBOL_MAP[fiat]
+        return crypto, fiat
 
     """Checks that message was from slack and has headers we expect"""
     def basic_header_verification(self):
