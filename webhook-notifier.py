@@ -7,14 +7,12 @@ from datetime import datetime
 from src.history import History
 from src.analysis import Analysis
 from src.coinbase import Coinbase, Currencies
+from src.logsetup import LogSetup
 from src.slack import Slack
 from src.stats import HourData
 from src.constants import SlackImages
 
-# Pre argparse constants
-LOG_LOC = "log_webhook"
-
-# region Argparse
+# region Argparse and logging
 parser = argparse.ArgumentParser(description="Post messages to slack if a cryptocurrency has changed price significantly")
 parser.add_argument("url",
                     help="Slack incoming webhook URL")
@@ -30,12 +28,19 @@ parser.add_argument("--threshold-ema", "-te", default=2.5, type=float,
                     help="Amount current price needs to be above/below the EMA to cause a post to be sent")
 parser.add_argument("--threshold-reset", "-tr", default=1.25, type=float,
                     help="Amount EMA price needs to be within last post price to reset")
-parser.add_argument("--script-name", "-sn", default="",
+parser.add_argument("--script-name", "-sn", default="default", type=str,
                     help="Name of the script. Changes the name of json file and log location (use this if you're running the script multiple"
                          "times with different parameters)")
 parser.add_argument("--log-file", "-lf", action="store_true",
-                    help=f"Output logs into files in /{LOG_LOC}")
+                    help=f"Output logs into files (stored in separate log directory per script name)")
+parser.add_argument("--disable-stdout", "-dstd", action="store_false",
+                    help="Disable logging output to stdout")
 args = parser.parse_args()
+
+if len(args.script_name < 1):
+    parser.error("Script name must be at least 1 character long")
+
+LogSetup.setup(not args.disable_stdout, args.log_file, f"log_webhook/{args.script_name}")
 # endregion
 
 # region Constants
@@ -49,27 +54,7 @@ SLACK_CHANNEL = args.channel
 
 # 'Hard' Constants - may rely on other values set but shouldn't be changed
 SLACK_URL = args.url
-if args.script_name != "":
-    DATA_FILE = f"last_post_data_{args.script_name}.json"
-else:
-    DATA_FILE = "last_post_data.json"
-# endregion
-
-# region Logging
-logger = logging.getLogger()
-logFormatter = logging.Formatter("%(asctime)s [%(threadName)-12.12s] [%(levelname)-5.5s]  %(message)s")
-
-consoleHandler = logging.StreamHandler(sys.stdout)
-consoleHandler.setFormatter(logFormatter)
-logger.addHandler(consoleHandler)
-
-if args.log_file:
-    if not os.path.isdir(LOG_LOC):
-        os.mkdir(LOG_LOC)
-
-    fileHandler = logging.FileHandler(f"{LOG_LOC}/" + datetime.now().strftime("%Y-%m-%d %H;%M;%S") + ".txt")
-    fileHandler.setFormatter(logFormatter)
-    logger.addHandler(fileHandler)
+DATA_FILE = f"last_post_data_{args.script_name}.json"
 # endregion
 
 # Get data and convert accordingly

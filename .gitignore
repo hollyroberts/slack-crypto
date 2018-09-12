@@ -20,7 +20,8 @@
 __pycache__/
 
 ##### Other
-log/
+log_slash_command_server/
+log_webhook/
 
 # Test files
 date_test.py
