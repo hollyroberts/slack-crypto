@@ -2,6 +2,7 @@
   <dictionary name="User">
     <words>
       <w>argparse</w>
+      <w>asctime</w>
       <w>bitcoin</w>
       <w>coinbase</w>
       <w>cooldown</w>
@@ -11,6 +12,7 @@
       <w>dbnavigator</w>
       <w>ethereum</w>
       <w>fromtimestamp</w>
+      <w>levelname</w>
       <w>litecoin</w>
       <w>mins</w>
       <w>perc</w>

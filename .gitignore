@@ -20,6 +20,7 @@
 __pycache__/
 
 ##### Other
+log/
 
 # Test files
 date_test.py
