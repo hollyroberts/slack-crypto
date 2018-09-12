@@ -1,4 +1,5 @@
 import argparse
+import logging
 
 from src.logsetup import LogSetup
 from src.server import CommandHandler
@@ -14,7 +15,7 @@ parser.add_argument("--port", "-p", default=80, type=int,
                     help="Web server port to run on")
 parser.add_argument("--log-file", "-lf", action="store_true",
                     help=f"Output logs into files in /{LOG_LOC}")
-parser.add_argument("--disable-stdout", "-dstd", action="store_false",
+parser.add_argument("--disable-stdout", "-dstd", action="store_true",
                     help="Disable logging output to stdout")
 args = parser.parse_args()
 

@@ -33,7 +33,7 @@ parser.add_argument("--script-name", "-sn", default="default", type=str,
                          "times with different parameters)")
 parser.add_argument("--log-file", "-lf", action="store_true",
                     help=f"Output logs into files (stored in separate log directory per script name)")
-parser.add_argument("--disable-stdout", "-dstd", action="store_false",
+parser.add_argument("--disable-stdout", "-dstd", action="store_true",
                     help="Disable logging output to stdout")
 args = parser.parse_args()
 
