@@ -6,6 +6,9 @@ import os
 
 from src.server import CommandHandler
 
+# Constants
+LOG_LOC = "log_slash_command_server"
+
 # region Argparse
 parser = argparse.ArgumentParser(description="Post messages to slack if a cryptocurrency has changed price significantly")
 parser.add_argument("signing secret",
@@ -13,7 +16,7 @@ parser.add_argument("signing secret",
 parser.add_argument("--port", "-p", default=80, type=int,
                     help="Web server port to run on")
 parser.add_argument("--log-file", "-lf", action="store_true",
-                    help="Output log files to /log folder (name is time that program was started at)")
+                    help=f"Output logs into files in /{LOG_LOC}")
 args = parser.parse_args()
 
 # region Logging
@@ -25,10 +28,10 @@ consoleHandler.setFormatter(logFormatter)
 logger.addHandler(consoleHandler)
 
 if args.log_file:
-    if not os.path.isdir("log"):
-        os.mkdir("log")
+    if not os.path.isdir(LOG_LOC):
+        os.mkdir(LOG_LOC)
 
-    fileHandler = logging.FileHandler("log/" + datetime.now().strftime("%Y-%m-%d %H;%M;%S") + ".txt")
+    fileHandler = logging.FileHandler(f"{LOG_LOC}/" + datetime.now().strftime("%Y-%m-%d %H;%M;%S") + ".txt")
     fileHandler.setFormatter(logFormatter)
     logger.addHandler(fileHandler)
 
