@@ -1,5 +1,5 @@
-from stats import HourData
-from history import History
+from src.stats import HourData
+from src.history import History
 
 class Analysis:
     @staticmethod

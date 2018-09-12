@@ -1,12 +1,12 @@
 import argparse
 import sys
 
-from history import History
-from analysis import Analysis
-from coinbase import Coinbase, Currencies
-from slack import Slack
-from stats import HourData
-from constants import SlackImages
+from src.history import History
+from src.analysis import Analysis
+from src.coinbase import Coinbase, Currencies
+from src.slack import Slack
+from src.stats import HourData
+from src.constants import SlackImages
 
 # region Argparse
 parser = argparse.ArgumentParser(description="Post messages to slack if a cryptocurrency has changed price significantly")

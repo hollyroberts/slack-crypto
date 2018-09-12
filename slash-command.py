@@ -1,5 +1,5 @@
 import argparse
-from server import CommandHandler
+from src.server import CommandHandler
 
 # region Argparse
 parser = argparse.ArgumentParser(description="Post messages to slack if a cryptocurrency has changed price significantly")

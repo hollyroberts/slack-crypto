@@ -1,9 +1,9 @@
 import requests
 import json
 
-from coinbase import Currency, Coinbase
-from stats import HourData
-from constants import SlackColourThresholds
+from src.coinbase import Currency, Coinbase
+from src.stats import HourData
+from src.constants import SlackColourThresholds
 
 class Slack:
     ATTACHMENT_MIN_WIDTH = 21

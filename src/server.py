@@ -3,9 +3,9 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 import urllib.parse as urlparse
 import hmac
 import time
-from coinbase import Coinbase, Currencies, Currency
+from src.coinbase import Coinbase, Currencies, Currency
 import shlex
-from slack import Slack
+from src.slack import Slack
 from datetime import datetime, timedelta
 import requests
 import json
