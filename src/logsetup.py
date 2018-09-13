@@ -20,7 +20,7 @@ class LogSetup:
             
         if file:
             if not os.path.isdir(location):
-                os.mkdir(location)
+                os.makedirs(location, exist_ok=True)
 
             file_handler = logging.FileHandler(f"{location}/" + datetime.now().strftime("%Y-%m-%d %H;%M;%S") + ".txt")
             file_handler.setFormatter(log_formatter)

@@ -35,7 +35,7 @@ parser.add_argument("--disable-stdout", "-dstd", action="store_true",
                     help="Disable logging output to stdout")
 args = parser.parse_args()
 
-if len(args.script_name < 1):
+if len(args.script_name) < 1:
     parser.error("Script name must be at least 1 character long")
 
 LogSetup.setup(not args.disable_stdout, args.log_file, f"log_webhook/{args.script_name}")
