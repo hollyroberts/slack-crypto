@@ -1,8 +1,5 @@
 import argparse
 import sys
-import os
-import logging
-from datetime import datetime
 
 from src.history import History
 from src.analysis import Analysis

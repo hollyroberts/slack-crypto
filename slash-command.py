@@ -1,5 +1,4 @@
 import argparse
-import logging
 
 from src.logsetup import LogSetup
 from src.server import CommandHandler
