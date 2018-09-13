@@ -1,3 +1,4 @@
+import logging
 import argparse
 import sys
 
@@ -71,10 +72,10 @@ if Analysis.ema_checks(stats, history, EMA_THRESHOLD_PERCENT, EMA_RESET_PERCENT)
 if not Analysis.should_post(history, stats, prices, EMA_THRESHOLD_PERCENT):
     sys.exit(1)
 
-print("Message should be posted, generating attachment")
+logging.info("Message should be posted, generating attachment")
 attachments = Slack.generate_post(prices, stats, Currencies.default())
 image_url = SlackImages.get_image(stats.is_diff_positive)
-print("Posting to slack")
+logging.info("Posting to slack")
 Slack.post_to_slack(BOT_NAME, image_url, "", attachments, SLACK_URL, SLACK_CHANNEL)
 
 history.price = stats.cur_price
@@ -82,4 +83,4 @@ history.rising = stats.is_diff_positive
 history.ema_reset = False
 history.save()
 
-print("Done")
+logging.info("Done")

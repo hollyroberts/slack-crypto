@@ -1,3 +1,4 @@
+import logging
 import time
 from datetime import datetime, timedelta
 import json
@@ -86,15 +87,15 @@ class Coinbase:
 
         # Ensure timestamps are every hour
         for i in range(len(data) - 1):
-            # print(datetime.fromtimestamp(self.data[i]['time']).strftime("%d/%m/%Y - %H:%M"))
+            # logging.info(datetime.fromtimestamp(self.data[i]['time']).strftime("%d/%m/%Y - %H:%M"))
             time_diff = data[i]['time'] - data[i + 1]['time']
-            # print(time_diff)
+            # logging.info(time_diff)
             assert time_diff == self.SECS_IN_MINUTE * self.MINS_IN_HOUR
 
-        """ Print information
+        """ print information
         for entry in self.data:
             time_formatted = datetime.fromtimestamp(entry['time']).strftime("[%d/%m/%Y] %H:%M:%S")
-            print(time_formatted + " - " + str(entry['open']))
+            logging.info(time_formatted + " - " + str(entry['open']))
         """
 
         prices = []
@@ -111,7 +112,7 @@ class Coinbase:
         historical_time = historical_data[0][0]
         historical_price = historical_data[0][3]
 
-        print(f"Price {days} days ago was {self.currency.fiat_symbol}{historical_price} (exact time: " + datetime.fromtimestamp(historical_time).strftime("%d/%m/%Y - %H:%M") + ")")
+        logging.info(f"Price {days} days ago was {self.currency.fiat_symbol}{historical_price} (exact time: " + datetime.fromtimestamp(historical_time).strftime("%d/%m/%Y - %H:%M") + ")")
         return historical_price
 
     """Retrieve the un filtered results from coinbase according to the interval"""
@@ -124,7 +125,7 @@ class Coinbase:
         historical_data = []
 
         # Send request
-        print(f"Retrieving data from coinbase (interval {self.interval} mins)")
+        logging.info(f"Retrieving data from coinbase (interval {self.interval} mins)")
         for i in range(round(self.MINS_IN_HOUR / self.interval)):
             historical_data += self.get_historical_prices(time_start, time_end)
 
@@ -172,11 +173,11 @@ class Coinbase:
             resp = requests.get(url, params=params)
 
             if resp.status_code == 429:
-                print("GET request received 429 (timeout). Waiting 1 second and trying again")
+                logging.info("GET request received 429 (timeout). Waiting 1 second and trying again")
                 time.sleep(1)
                 continue
             elif resp.status_code != 200:
-                print("API error - Response code was not 200 or 429")
+                logging.info("API error - Response code was not 200 or 429")
                 raise IOError("Code not 200")
             else:
                 return resp.text

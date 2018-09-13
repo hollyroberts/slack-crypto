@@ -1,15 +1,18 @@
-import hashlib
-from http.server import BaseHTTPRequestHandler, HTTPServer
-import urllib.parse as urlparse
-import hmac
-import time
-from src.coinbase import Coinbase, Currencies, Currency
-import shlex
-from src.slack import Slack
+import logging
 from datetime import datetime, timedelta
 import requests
 import json
+import time
+
+from http.server import BaseHTTPRequestHandler, HTTPServer
+import urllib.parse as urlparse
+import hashlib
+import hmac
+import shlex
 import threading
+
+from src.slack import Slack
+from src.coinbase import Coinbase, Currencies, Currency
 
 class CommandHandler(BaseHTTPRequestHandler):
     # Seconds to allow for timestamp mismatch
@@ -36,10 +39,10 @@ class CommandHandler(BaseHTTPRequestHandler):
     # POST is for submitting data.
     # noinspection PyPep8Naming
     def do_POST(self):
-        print(f"Incoming HTTP POST: {self.path}")
+        logging.info(f"Incoming HTTP POST: {self.path}")
 
         if self.path != "/slack/crypto":
-            print("Path not /slack/crypto")
+            logging.info("Path not /slack/crypto")
             self.send_error(400)
             return
 
@@ -63,19 +66,19 @@ class CommandHandler(BaseHTTPRequestHandler):
         try:
             currency, days = self.parse_args(body_dict)
         except ParseError as e:
-            print(f"Parse error: {e}")
+            logging.info(f"Parse error: {e}")
             self.initial_response(f"Parse error: {e}")
             return
 
         # Don't allow more than 20 days to be retrieved
         if len(days) > self.MAX_DAYS:
-            print(f"Number of days was greater than {self.MAX_DAYS}")
+            logging.info(f"Number of days was greater than {self.MAX_DAYS}")
             self.initial_response(f"Max number of days to request is {self.MAX_DAYS}")
             return
 
         # Send 200
         # Temporary code to notify about GBP support (TODO remove after a month)
-        print("Sending initial 200 response")
+        logging.info("Sending initial 200 response")
         resp = []
         if len(days) > 2:
             resp.append(f"Retrieving data for {len(days)} days, this may take a few seconds")
@@ -95,12 +98,12 @@ class CommandHandler(BaseHTTPRequestHandler):
         try:
             slack_attachments = self.create_slack_attachments(currency, days)
         except IOError as e:
-            print(e)
+            logging.info(e)
             self.send_response_msg(url, {"text": "Error retrieving data, please try again later (or complain at blackened)"})
             return
 
         # Post to slack
-        print("Posting to slack")
+        logging.info("Posting to slack")
         json_msg = {
             "text": f"{user} requested a price report",
             "attachments": slack_attachments
@@ -131,7 +134,7 @@ class CommandHandler(BaseHTTPRequestHandler):
 
     def parse_args(self, body_dict: dict):
         # Default values
-        print("Parsing args")
+        logging.info("Parsing args")
         messages = body_dict.get('text', [''])[0]
         messages = shlex.split(messages)
 
@@ -225,7 +228,7 @@ class CommandHandler(BaseHTTPRequestHandler):
         for header in self.REQUIRED_HEADERS:
             # Header exists
             if header not in self.headers:
-                print(f"Did not receive header {header}")
+                logging.info(f"Did not receive header {header}")
                 return False
 
             # Header has value expected
@@ -234,7 +237,7 @@ class CommandHandler(BaseHTTPRequestHandler):
                 continue
 
             if self.headers[header] != req_val:
-                print(f"Header {header} was not \"{req_val}\", instead was \"{self.headers[header]}\"")
+                logging.info(f"Header {header} was not \"{req_val}\", instead was \"{self.headers[header]}\"")
                 return False
 
         return True
@@ -242,7 +245,7 @@ class CommandHandler(BaseHTTPRequestHandler):
     """Verify that message was given by slack
     https://api.slack.com/docs/verifying-requests-from-slack"""
     def verify_signature(self, body: str):
-        print("Verifying signature")
+        logging.info("Verifying signature")
 
         # Read headers
         given_sig = self.headers[self.SIG_STRING]
@@ -252,7 +255,7 @@ class CommandHandler(BaseHTTPRequestHandler):
         unix_now = time.time()
         time_diff = unix_now - int(timestamp)
         if time_diff > self.REPLAY_PREVENTION:
-            print(f"Time difference was too large ({time_diff:,.0f} seconds)")
+            logging.info(f"Time difference was too large ({time_diff:,.0f} seconds)")
             return False
 
         # Compute signature
@@ -264,9 +267,9 @@ class CommandHandler(BaseHTTPRequestHandler):
         if hmac.compare_digest(computed_sig, given_sig):
             return True
         else:
-            print("Signatures don't match")
-            print(f"Given: {given_sig}")
-            print(f"Expected: {computed_sig}")
+            logging.info("Signatures don't match")
+            logging.info(f"Given: {given_sig}")
+            logging.info(f"Expected: {computed_sig}")
 
     @staticmethod
     def send_response_msg(url, json_msg, ephemeral=True):
@@ -289,12 +292,12 @@ class CommandHandler(BaseHTTPRequestHandler):
     @staticmethod
     def print_body_dict(body_dict: dict):
         for key in body_dict:
-            print(key + ": " + body_dict[key][0])
+            logging.info(key + ": " + body_dict[key][0])
 
     @staticmethod
     def run(port):
         server = HTTPServer(('', port), CommandHandler)
-        print(f"Web server started on port {port}")
+        logging.info(f"Web server started on port {port}")
         server.serve_forever()
 
 class ParseError(Exception):

@@ -1,3 +1,4 @@
+import logging
 import requests
 import json
 
@@ -19,22 +20,22 @@ class Slack:
                 cls.slack_error_msg(response, slack_data)
                 return -1
         except requests.exceptions.ConnectionError:
-            print("Connection refused")
+            logging.info("Connection refused")
             cls.slack_error_msg(response, slack_data)
             return -1
         except Exception as e:
-            print("An exception occurred:")
-            print(e)
+            logging.info("An exception occurred:")
+            logging.info(e)
             cls.slack_error_msg(response, slack_data)
             return -1
 
     @classmethod
     def slack_error_msg(cls, response, slack_data):
-        print("An error occurred posting to slack")
-        print("Response given:")
-        print(response)
-        print("Data sent:")
-        print(slack_data)
+        logging.info("An error occurred posting to slack")
+        logging.info("Response given:")
+        logging.info(response)
+        logging.info("Data sent:")
+        logging.info(slack_data)
 
     @classmethod
     def generate_attachments(cls, currency: Currency, hour_price_map: dict, cur_price: float, hours):
@@ -73,8 +74,8 @@ class Slack:
             price_28_days = cb.price_days_ago(28)
             attachments.append(cls.format_price_entry(cur_price, price_28_days, currency, 28, False))
         except Exception as e:
-            print(e)
-            print("Ignoring error, posting 3 historical prices instead of 4 (28 day price omitted)")
+            logging.info(e)
+            logging.info("Ignoring error, posting 3 historical prices instead of 4 (28 day price omitted)")
         
         return attachments
 
@@ -101,7 +102,7 @@ class Slack:
         pretext += " " * chars_to_pad
 
         text = f"{pretext}{currency.fiat_symbol}{cls.format_num(historical_price)} ({diff:+.2f}%)"
-        print(text)
+        logging.info(text)
         attachment = {"fallback": "some price changes", "text": text, "color": colour}
 
         return attachment
