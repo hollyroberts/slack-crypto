@@ -19,7 +19,7 @@ class Currencies:
 
     FIAT_MAP = {
         "EUR": ["Euro", "Euros"],
-        "GBP": ["Pound", "Pounds", "Sterling", "Great British Pounds"],
+        "GBP": ["Pound", "Pounds", "Sterling", "Great British Pounds", "Great Pounds British", "GPB"],
         "USD": ["Dollar", "Dollars", "Freedom Money", "Buck", "Bucks"]
     }
 
