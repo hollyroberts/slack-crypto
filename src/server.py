@@ -55,6 +55,9 @@ class CommandHandler(BaseHTTPRequestHandler):
         body_data = self.rfile.read(content_length).decode("utf-8")
         body_dict = urlparse.parse_qs(body_data)
 
+        response_url = body_dict['response_url'][0]
+        username = body_dict['user_name'][0]
+
         # Verify signature
         if not self.verify_signature(body_data):
             self.send_error(401)
@@ -62,9 +65,9 @@ class CommandHandler(BaseHTTPRequestHandler):
 
         # Log request
         logging.debug("Request info:")
-        logging.debug(f"Username: {body_dict['user_name']}")
-        logging.debug(f"Channel: {body_dict['channel_name']} ({body_dict['channel_id']}")
-        logging.debug(f"Command: {body_dict['command']} {body_dict.get('text', '')}")
+        logging.debug("Username: " + body_dict['user_name'][0])
+        logging.debug("Channel: " + body_dict['channel_name'][0] + " (" + body_dict['channel_id'][0] + ")")
+        logging.debug("Command: " + body_dict['command'][0] + " " + body_dict.get('text', [''])[0])
 
         # Process help message instead
         if self.help_message(body_dict):
@@ -95,8 +98,7 @@ class CommandHandler(BaseHTTPRequestHandler):
         self.initial_response('\n'.join(resp))
 
         # Process request on separate thread to not block 200 response
-        response_url = body_dict['response_url'][0]
-        username = body_dict['user_name'][0]
+        logging.debug("Starting the separate thread to handle the rest of the processing")
         t = threading.Thread(target=self.post_200_code, args=(response_url, username, currency, days))
         t.daemon = True
         t.start()

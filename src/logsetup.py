@@ -18,6 +18,7 @@ class LogSetup:
         if stdout:
             console_handler = logging.StreamHandler(sys.stdout)
             console_handler.setFormatter(log_formatter)
+            console_handler.setLevel(logging.DEBUG)
             logger.addHandler(console_handler)
             
         if file:
@@ -26,6 +27,7 @@ class LogSetup:
 
             file_handler = logging.FileHandler(f"{location}/" + datetime.now().strftime("%Y-%m-%d %H;%M;%S") + ".txt")
             file_handler.setFormatter(log_formatter)
+            file_handler.setLevel(logging.DEBUG)
             logger.addHandler(file_handler)
 
         # Override default handling of uncaught exceptions (program crash)

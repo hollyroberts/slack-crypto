@@ -112,7 +112,7 @@ class Coinbase:
         historical_time = historical_data[0][0]
         historical_price = historical_data[0][3]
 
-        logging.info(f"Price {days} days ago was {self.currency.fiat_symbol}{historical_price} (exact time: " + datetime.fromtimestamp(historical_time).strftime("%d/%m/%Y - %H:%M") + ")")
+        logging.debug(f"Price {days} days ago was {self.currency.fiat_symbol}{historical_price} (exact time: " + datetime.fromtimestamp(historical_time).strftime("%d/%m/%Y - %H:%M") + ")")
         return historical_price
 
     """Retrieve the un filtered results from coinbase according to the interval"""
