@@ -3,6 +3,17 @@ from datetime import datetime
 import sys
 import os
 
+class MultiLineFormatter(logging.Formatter):
+    def format(self, record: logging.LogRecord):
+        msg = record.getMessage()
+        formatted_msg = super().format(record)
+
+        header_length = 0
+        if formatted_msg.endswith(msg):
+            header_length = len(formatted_msg) - len(msg)
+
+        formatted_msg = formatted_msg.replace('\n', '\n' + ' ' * header_length)
+        return formatted_msg
 
 class LogSetup:
     @staticmethod
@@ -11,7 +22,7 @@ class LogSetup:
         logger = logging.getLogger()
         logger.setLevel(logging.DEBUG)
 
-        log_formatter = logging.Formatter("%(asctime)s [%(threadName)-12.12s] [%(levelname)-5.5s]  %(message)s")
+        log_formatter = MultiLineFormatter("%(asctime)s [%(threadName)-12.12s] [%(levelname)-5.5s]  %(message)s")
         log_formatter.default_msec_format = '%s.%03d'
 
         # Disable requests and urllib3 library (blacklist). If more issues come up then I'll have to refactor
