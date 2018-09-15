@@ -14,6 +14,10 @@ class LogSetup:
         log_formatter = logging.Formatter("%(asctime)s [%(threadName)-12.12s] [%(levelname)-5.5s]  %(message)s")
         log_formatter.default_msec_format = '%s.%03d'
 
+        # Disable requests and urllib3 library (blacklist). If more issues come up then I'll have to refactor
+        logging.getLogger("requests").setLevel(logging.INFO)
+        logging.getLogger("urllib3").setLevel(logging.INFO)
+
         # Setup standard output and file output logging
         if stdout:
             console_handler = logging.StreamHandler(sys.stdout)
