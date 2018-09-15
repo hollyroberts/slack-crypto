@@ -17,7 +17,7 @@ class History:
                 self.price = last_post['price']
                 self.rising = last_post['rising']
         except IOError:
-            logging.info("Couldn't load file, using default values")
+            logging.warning("Couldn't load file, using default values")
             self.ema_reset = True
             self.price = None
             self.rising = True

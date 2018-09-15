@@ -66,7 +66,7 @@ class CommandHandler(BaseHTTPRequestHandler):
         try:
             currency, days = self.parse_args(body_dict)
         except ParseError as e:
-            logging.info(f"Parse error: {e}")
+            logging.warning(f"Parse error: {e}")
             self.initial_response(f"Parse error: {e}")
             return
 
@@ -98,7 +98,7 @@ class CommandHandler(BaseHTTPRequestHandler):
         try:
             slack_attachments = self.create_slack_attachments(currency, days)
         except IOError as e:
-            logging.info(e)
+            logging.exception(e, exc_info=True)
             self.send_response_msg(url, {"text": "Error retrieving data, please try again later (or complain at blackened)"})
             return
 

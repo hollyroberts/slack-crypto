@@ -20,22 +20,22 @@ class Slack:
                 cls.slack_error_msg(response, slack_data)
                 return -1
         except requests.exceptions.ConnectionError:
-            logging.info("Connection refused")
+            logging.exception("Connection refused")
             cls.slack_error_msg(response, slack_data)
             return -1
         except Exception as e:
-            logging.info("An exception occurred:")
-            logging.info(e)
+            logging.exception("An exception occurred:")
+            logging.exception(e)
             cls.slack_error_msg(response, slack_data)
             return -1
 
     @classmethod
     def slack_error_msg(cls, response, slack_data):
-        logging.info("An error occurred posting to slack")
-        logging.info("Response given:")
-        logging.info(response)
-        logging.info("Data sent:")
-        logging.info(slack_data)
+        logging.error("An error occurred posting to slack")
+        logging.error("Response given:")
+        logging.error(response)
+        logging.error("Data sent:")
+        logging.error(slack_data)
 
     @classmethod
     def generate_attachments(cls, currency: Currency, hour_price_map: dict, cur_price: float, hours):
@@ -74,8 +74,8 @@ class Slack:
             price_28_days = cb.price_days_ago(28)
             attachments.append(cls.format_price_entry(cur_price, price_28_days, currency, 28, False))
         except Exception as e:
-            logging.info(e)
-            logging.info("Ignoring error, posting 3 historical prices instead of 4 (28 day price omitted)")
+            logging.exception(e)
+            logging.exception("Ignoring error, posting 3 historical prices instead of 4 (28 day price omitted)")
         
         return attachments
 
