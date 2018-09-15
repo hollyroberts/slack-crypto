@@ -102,7 +102,6 @@ class Slack:
         pretext += " " * chars_to_pad
 
         text = f"{pretext}{currency.fiat_symbol}{cls.format_num(historical_price)} ({diff:+.2f}%)"
-        logging.info(text)
         attachment = {"fallback": "some price changes", "text": text, "color": colour}
 
         return attachment

@@ -55,10 +55,18 @@ class CommandHandler(BaseHTTPRequestHandler):
         body_data = self.rfile.read(content_length).decode("utf-8")
         body_dict = urlparse.parse_qs(body_data)
 
+        # Verify signature
         if not self.verify_signature(body_data):
             self.send_error(401)
             return
 
+        # Log request
+        logging.debug("Request info:")
+        logging.debug(f"Username: {body_dict['user_name']}")
+        logging.debug(f"Channel: {body_dict['channel_name']} ({body_dict['channel_id']}")
+        logging.debug(f"Command: {body_dict['command']} {body_dict.get('text', '')}")
+
+        # Process help message instead
         if self.help_message(body_dict):
             return
 

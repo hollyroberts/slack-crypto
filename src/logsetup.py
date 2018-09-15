@@ -9,7 +9,7 @@ class LogSetup:
     def setup(stdout: bool, file: bool, location: str):
         # Basic setup
         logger = logging.getLogger()
-        logger.setLevel(logging.INFO)
+        logger.setLevel(logging.DEBUG)
 
         log_formatter = logging.Formatter("%(asctime)s [%(threadName)-12.12s] [%(levelname)-5.5s]  %(message)s")
         log_formatter.default_msec_format = '%s.%03d'
