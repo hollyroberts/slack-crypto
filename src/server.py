@@ -14,6 +14,14 @@ import threading
 from src.slack import Slack
 from src.coinbase import Coinbase, Currencies, Currency
 
+"""Override methods of HTTPServer to improve logging"""
+class CustomHTTPServer(HTTPServer):
+    def handle_error(self, request, client_address):
+        logging.exception(f"Exception happened during processing of request from {client_address}", exc_info=True)
+
+class ParseError(Exception):
+    pass
+
 class CommandHandler(BaseHTTPRequestHandler):
     # Seconds to allow for timestamp mismatch
     # SHA-256 should be secure enough to set it to 5 minutes (value given in docs)
@@ -103,7 +111,16 @@ class CommandHandler(BaseHTTPRequestHandler):
         t.daemon = True
         t.start()
 
+    """Wrapper for starting threading"""
     def post_200_code(self, url, user, currency, days):
+        # noinspection PyBroadException
+        try:
+            self.__post_200_code(url, user, currency, days)
+        except Exception:
+            logging.exception("Exception occurred in thread", exc_info=True)
+
+    """Implementation of post_200_code"""
+    def __post_200_code(self, url, user, currency, days):
         # Get prices and attachment from prices
         try:
             slack_attachments = self.create_slack_attachments(currency, days)
@@ -304,11 +321,13 @@ class CommandHandler(BaseHTTPRequestHandler):
         for key in body_dict:
             logging.info(key + ": " + body_dict[key][0])
 
+    """Override default log messaging to do nothing (otherwise would go to stderr
+    This is potentially unwanted if output is captured directly to output (although cron needs the process to end)"""
+    def log_message(self, format_, *args):
+        pass
+
     @staticmethod
     def run(port):
-        server = HTTPServer(('', port), CommandHandler)
+        server = CustomHTTPServer(('', port), CommandHandler)
         logging.info(f"Web server started on port {port}")
         server.serve_forever()
-
-class ParseError(Exception):
-    pass
