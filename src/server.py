@@ -28,7 +28,7 @@ class CommandHandler(BaseHTTPRequestHandler):
     REPLAY_PREVENTION = 300
 
     # Maximum days to be allowed to retrieve
-    MAX_DAYS = 20
+    MAX_DAYS = 10
 
     VERSION = "v0"
     SIGNING_SECRET = ""
