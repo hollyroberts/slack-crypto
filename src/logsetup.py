@@ -41,11 +41,17 @@ class CustMultiLineFormatter(logging.Formatter):
 
         return s
 
+"""Filter class to restrict stdout handler from posting messages handled by stderr handler"""
+class StdOutFilter(logging.Filter):
+    def filter(self, record: logging.LogRecord):
+        return record.levelno < logging.ERROR
+
 class LogSetup:
     @staticmethod
-    def setup(stdout: bool, file: bool, location: str):
+    def setup(stdout: bool, stderr: bool, file: bool, location: str):
         # Basic setup
         logger = logging.getLogger()
+        logging.addLevelName(logging.WARNING, "WARN")
         logger.setLevel(logging.DEBUG)
 
         log_formatter = CustMultiLineFormatter("%(asctime)s [%(threadName)-12.12s] [%(levelname)-5.5s] %(message)s")
@@ -55,13 +61,22 @@ class LogSetup:
         logging.getLogger("requests").setLevel(logging.INFO)
         logging.getLogger("urllib3").setLevel(logging.INFO)
 
-        # Setup standard output and file output logging
+        # Standard output handler
         if stdout:
-            console_handler = logging.StreamHandler(sys.stdout)
-            console_handler.setFormatter(log_formatter)
-            console_handler.setLevel(logging.DEBUG)
-            logger.addHandler(console_handler)
-            
+            stdout_handler = logging.StreamHandler(sys.stdout)
+            stdout_handler.setFormatter(log_formatter)
+            stdout_handler.setLevel(logging.DEBUG)
+            stdout_handler.addFilter(StdOutFilter())
+            logger.addHandler(stdout_handler)
+
+        # Standard error handler
+        if stdout or stderr:
+            stderr_handler = logging.StreamHandler(sys.stderr)
+            stderr_handler.setFormatter(log_formatter)
+            stderr_handler.setLevel(logging.ERROR)
+            logger.addHandler(stderr_handler)
+
+        # File handler
         if file:
             if not os.path.isdir(location):
                 os.makedirs(location, exist_ok=True)

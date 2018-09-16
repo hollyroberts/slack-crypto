@@ -26,4 +26,5 @@ temp_logs/
 
 # Test files
 date_test.py
+test.py
 last_post_data.json

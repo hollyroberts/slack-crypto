@@ -31,14 +31,16 @@ parser.add_argument("--script-name", "-sn", default="default", type=str,
                          "times with different parameters)")
 parser.add_argument("--log-file", "-lf", action="store_true",
                     help=f"Output logs into files (stored in separate log directory per script name)")
-parser.add_argument("--disable-stdout", "-dstd", action="store_true",
-                    help="Disable logging output to stdout")
+parser.add_argument("--disable-stdout", "-dso", action="store_true",
+                    help="Disable log messages lower than ERROR from appearing in stdout")
+parser.add_argument("--disable-stderr", "-dse", action="store_true",
+                    help="Disable error messages from appearing in stdout (requires --disable-stdout to also be set)")
 args = parser.parse_args()
 
 if len(args.script_name) < 1:
     parser.error("Script name must be at least 1 character long")
 
-LogSetup.setup(not args.disable_stdout, args.log_file, f"log_webhook/{args.script_name}")
+LogSetup.setup(not args.disable_stdout, not args.disable_stderr, args.log_file, f"log_webhook/{args.script_name}")
 # endregion
 
 # region Constants
