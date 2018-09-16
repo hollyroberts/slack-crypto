@@ -5,7 +5,7 @@ import os
 
 """Custom formatter that indents newlines the same amount as the first line
 Requires %(message)s to be the last thing"""
-class MultiLineFormatter(logging.Formatter):
+class CustMultiLineFormatter(logging.Formatter):
     """Adapted from logging.Formatter"""
     def format(self, record: logging.LogRecord):
         # Change it so we save the initial string (without extras), and are not reliant on implementation
@@ -34,7 +34,10 @@ class MultiLineFormatter(logging.Formatter):
         header_length = 0
         if initial_str.endswith(msg):
             header_length = len(initial_str) - len(msg)
-        s = s.replace('\n', '\n' + ' ' * header_length)
+        replace_str = '\n' + ' ' * header_length
+        if header_length >= 2:
+            replace_str = replace_str[:-2] + '| '
+        s = s.replace('\n', replace_str)
 
         return s
 
@@ -45,7 +48,7 @@ class LogSetup:
         logger = logging.getLogger()
         logger.setLevel(logging.DEBUG)
 
-        log_formatter = MultiLineFormatter("%(asctime)s [%(threadName)-12.12s] [%(levelname)-5.5s]  %(message)s")
+        log_formatter = CustMultiLineFormatter("%(asctime)s [%(threadName)-12.12s] [%(levelname)-5.5s] %(message)s")
         log_formatter.default_msec_format = '%s.%03d'
 
         # Disable requests and urllib3 library (blacklist). If more issues come up then I'll have to refactor
