@@ -79,7 +79,8 @@ class CommandHandler(BaseHTTPRequestHandler):
             currency, days = ServerProcessor.parse_args(body_dict)
         except ParseError as e:
             logging.warning(f"Parse error: {e}")
-            self.initial_response(f"Parse error: {e}")
+            self.initial_response(f"Parse error: {e}"
+                                  f"\nUse `/prices help` for help")
             return
 
         # Don't allow more than 20 days to be retrieved

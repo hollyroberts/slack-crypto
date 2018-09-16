@@ -41,14 +41,15 @@ class ServerProcessor:
             num_str_args += 1
 
         if num_str_args > 2:
-            raise ParseError("Received too many non digit entries")
+            raise ParseError("The first 2 arguments can be a fiat and crypto currency, but the rest of the arguments"
+                             "must be positive integers")
 
         while len(messages) > i:
             msg = messages[i]
             i += 1
 
             if not msg.isdigit():
-                raise ParseError("Received non digit entry after digit entry")
+                raise ParseError(f"'{msg}' is not a positive integer. The list of days must be the last arguments")
 
         # Get currency info
         if num_str_args == 1:
@@ -78,7 +79,7 @@ class ServerProcessor:
         if fiat is not None:
             return Currency(Currencies.CRYPTO_DEFAULT, fiat)
 
-        raise ParseError("Could not parse first argument to cryptocurrency or fiat currency")
+        raise ParseError(f"Could not interpret {message} as crypto or fiat currency")
 
     @staticmethod
     def parse_currency_args_2(message: list):
@@ -87,7 +88,7 @@ class ServerProcessor:
         if crypto is not None:
             fiat = Currencies.get_map_match(Currencies.FIAT_MAP, message[1])
             if fiat is None:
-                raise ParseError("First argument was a cryptocurrency, but second argument was not a fiat currency")
+                raise ParseError(f"Could not interpret '{message[1]}' as a fiat currency ('{message[0]}' was a cryptocurrency)")
 
             return Currency(crypto, fiat)
 
@@ -96,9 +97,11 @@ class ServerProcessor:
         if fiat is not None:
             crypto = Currencies.get_map_match(Currencies.CRYPTO_MAP, message[1])
             if crypto is None:
-                raise ParseError("First argument was a fiat currency, but second argument was not a cryptocurrency")
+                raise ParseError(f"Could not interpret '{message[1]}' as a cryptocurrency ('{message[0]}' was a fiat currency)")
 
             return Currency(crypto, fiat)
+
+        raise ParseError(f"Could not interpret '{message[0]}' as crypto or fiat currency")
 
     @staticmethod
     def create_slack_attachments(currency: Currency, days: list):
@@ -138,6 +141,12 @@ class ServerProcessor:
         try:
             slack_attachments = ServerProcessor.create_slack_attachments(currency, days)
         except IOError as e:
+            logging.exception(e, exc_info=True)
+            ServerProcessor.send_response_msg(url, {
+                "text": "Error querying coinbase, please try again later"
+            })
+            return
+        except Exception as e:
             logging.exception(e, exc_info=True)
             ServerProcessor.send_response_msg(url, {
                 "text": "Error retrieving data, please try again later (or complain at blackened)"})
