@@ -1,26 +1,19 @@
 import logging
-from datetime import datetime, timedelta
-import requests
-import json
 import time
 
 from http.server import BaseHTTPRequestHandler, HTTPServer
 import urllib.parse as urlparse
 import hashlib
 import hmac
-import shlex
 import threading
 
-from src.slack import Slack
-from src.coinbase import Coinbase, Currencies, Currency
+from src.coinbase import Currencies
+from src.server_processor import ServerProcessor, ParseError
 
 """Override methods of HTTPServer to improve logging"""
 class CustomHTTPServer(HTTPServer):
     def handle_error(self, request, client_address):
         logging.exception(f"Exception happened during processing of request from {client_address}", exc_info=True)
-
-class ParseError(Exception):
-    pass
 
 class CommandHandler(BaseHTTPRequestHandler):
     # Seconds to allow for timestamp mismatch
@@ -83,7 +76,7 @@ class CommandHandler(BaseHTTPRequestHandler):
 
         # Parse args
         try:
-            currency, days = self.parse_args(body_dict)
+            currency, days = ServerProcessor.parse_args(body_dict)
         except ParseError as e:
             logging.warning(f"Parse error: {e}")
             self.initial_response(f"Parse error: {e}")
@@ -107,100 +100,9 @@ class CommandHandler(BaseHTTPRequestHandler):
 
         # Process request on separate thread to not block 200 response
         logging.debug("Starting the separate thread to handle the rest of the processing")
-        t = threading.Thread(target=self.post_200_code, args=(response_url, username, currency, days))
+        t = threading.Thread(target=ServerProcessor.post_200_code, args=(response_url, username, currency, days))
         t.daemon = True
         t.start()
-
-    """Wrapper for starting threading"""
-    def post_200_code(self, url, user, currency, days):
-        # noinspection PyBroadException
-        try:
-            self.__post_200_code(url, user, currency, days)
-        except Exception:
-            logging.exception("Exception occurred in thread", exc_info=True)
-
-    """Implementation of post_200_code"""
-    def __post_200_code(self, url, user, currency, days):
-        # Get prices and attachment from prices
-        try:
-            slack_attachments = self.create_slack_attachments(currency, days)
-        except IOError as e:
-            logging.exception(e, exc_info=True)
-            self.send_response_msg(url, {"text": "Error retrieving data, please try again later (or complain at blackened)"})
-            return
-
-        # Post to slack
-        logging.info("Posting to slack")
-        json_msg = {
-            "text": f"{user} requested a price report",
-            "attachments": slack_attachments
-        }
-        self.send_response_msg(url, json_msg, ephemeral=False)
-
-    @staticmethod
-    def create_slack_attachments(currency: Currency, days: list):
-        cb = Coinbase(currency, 1)
-        time_now = datetime.utcnow()
-
-        # Get 0/1/24 hour prices
-        cur_price, price_1_hour = cb.get_prices_closest_to_time(time_now, time_now - timedelta(minutes=60))
-        price_24_hour = cb.price_days_ago(1)
-
-        # Get day prices
-        day_prices = {}
-        for day in days:
-            day_prices[day] = cb.price_days_ago(day)
-
-        # Create message
-        pretext = f"{currency.crypto_long}'s current price is: {currency.fiat_symbol}{Slack.format_num(cur_price)}"
-        attachments = Slack.generate_attachments(currency, {1: price_1_hour, 24: price_24_hour}, cur_price, True)
-        attachments += Slack.generate_attachments(currency, day_prices, cur_price, False)
-        attachments[0]['pretext'] = pretext
-
-        return attachments
-
-    def parse_args(self, body_dict: dict):
-        # Default values
-        logging.info("Parsing args")
-        messages = body_dict.get('text', [''])[0]
-        messages = shlex.split(messages)
-
-        # Work out which args are what
-        num_str_args = 0
-        i = 0
-        while len(messages) > i:
-            msg = messages[i]
-            i += 1
-
-            if msg.isdigit():
-                break
-            num_str_args += 1
-
-        if num_str_args > 2:
-            raise ParseError("Received too many non digit entries")
-
-        while len(messages) > i:
-            msg = messages[i]
-            i += 1
-
-            if not msg.isdigit():
-                raise ParseError("Received non digit entry after digit entry")
-
-        # Get currency info
-        if num_str_args == 1:
-            currency = self.parse_currency_args_1(messages[0])
-        elif num_str_args == 2:
-            currency = self.parse_currency_args_2(messages)
-        else:
-            currency = Currency(Currencies.CRYPTO_DEFAULT, Currencies.FIAT_DEFAULT)
-
-        # Extract, order, remove duplicate days, and remove days < 2
-        days = list(int(d) for d in messages[num_str_args:] if int(d) >= 2)
-        if len(days) == 0:
-            days = [7, 28]
-        days = sorted(set(days))
-
-        return currency, days
 
     def help_message(self, body_dict: dict):
         text = body_dict.get("text", [""])[0].lower()
@@ -215,40 +117,6 @@ class CommandHandler(BaseHTTPRequestHandler):
 
         self.initial_response(return_msg)
         return True
-
-    @staticmethod
-    def parse_currency_args_1(message: str):
-        # Is arg crypto?
-        crypto = Currencies.get_map_match(Currencies.CRYPTO_MAP, message)
-        if crypto is not None:
-            return Currency(crypto, Currencies.FIAT_DEFAULT)
-
-        # Is arg fiat?
-        fiat = Currencies.get_map_match(Currencies.FIAT_MAP, message)
-        if fiat is not None:
-            return Currency(Currencies.CRYPTO_DEFAULT, fiat)
-
-        raise ParseError("Could not parse first argument to cryptocurrency or fiat currency")
-
-    @staticmethod
-    def parse_currency_args_2(message: list):
-        # Try crypto being first
-        crypto = Currencies.get_map_match(Currencies.CRYPTO_MAP, message[0])
-        if crypto is not None:
-            fiat = Currencies.get_map_match(Currencies.FIAT_MAP, message[1])
-            if fiat is None:
-                raise ParseError("First argument was a cryptocurrency, but second argument was not a fiat currency")
-
-            return Currency(crypto, fiat)
-
-        # Try fiat being first
-        fiat = Currencies.get_map_match(Currencies.FIAT_MAP, message[0])
-        if fiat is not None:
-            crypto = Currencies.get_map_match(Currencies.CRYPTO_MAP, message[1])
-            if crypto is None:
-                raise ParseError("First argument was a fiat currency, but second argument was not a cryptocurrency")
-
-            return Currency(crypto, fiat)
 
     """Checks that message was from slack and has headers we expect"""
     def basic_header_verification(self):
@@ -298,15 +166,6 @@ class CommandHandler(BaseHTTPRequestHandler):
             logging.info(f"Given: {given_sig}")
             logging.info(f"Expected: {computed_sig}")
 
-    @staticmethod
-    def send_response_msg(url, json_msg, ephemeral=True):
-        if ephemeral:
-            json_msg['response_type'] = "ephemeral"
-        else:
-            json_msg['response_type'] = "in_channel"
-
-        requests.post(url, data=json.dumps(json_msg), headers={"content-type": "application/json"})
-
     """Send 200 message back"""
     def initial_response(self, message: str = None):
         self.send_response(200)
@@ -314,12 +173,6 @@ class CommandHandler(BaseHTTPRequestHandler):
 
         if message is not None:
             self.wfile.write(message.encode())
-
-    """Debug method to print body contents received"""
-    @staticmethod
-    def print_body_dict(body_dict: dict):
-        for key in body_dict:
-            logging.info(key + ": " + body_dict[key][0])
 
     """Override default log messaging to do nothing (otherwise would go to stderr
     This is potentially unwanted if output is captured directly to output (although cron needs the process to end)"""
