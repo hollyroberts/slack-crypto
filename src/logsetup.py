@@ -3,17 +3,40 @@ from datetime import datetime
 import sys
 import os
 
+"""Custom formatter that indents newlines the same amount as the first line
+Requires %(message)s to be the last thing"""
 class MultiLineFormatter(logging.Formatter):
+    """Adapted from logging.Formatter"""
     def format(self, record: logging.LogRecord):
-        msg = record.getMessage()
-        formatted_msg = super().format(record)
+        # Change it so we save the initial string (without extras), and are not reliant on implementation
+        record.message = record.getMessage()
+        msg = record.message
+        if self.usesTime():
+            record.asctime = self.formatTime(record, self.datefmt)
+        initial_str = self.formatMessage(record)
+        s = initial_str
 
+        if record.exc_info:
+            # Cache the traceback text to avoid converting it multiple times
+            # (it's constant anyway)
+            if not record.exc_text:
+                record.exc_text = self.formatException(record.exc_info)
+        if record.exc_text:
+            if s[-1:] != "\n":
+                s = s + "\n"
+            s = s + record.exc_text
+        if record.stack_info:
+            if s[-1:] != "\n":
+                s = s + "\n"
+            s = s + self.formatStack(record.stack_info)
+
+        # Replace newlines with indentation
         header_length = 0
-        if formatted_msg.endswith(msg):
-            header_length = len(formatted_msg) - len(msg)
+        if initial_str.endswith(msg):
+            header_length = len(initial_str) - len(msg)
+        s = s.replace('\n', '\n' + ' ' * header_length)
 
-        formatted_msg = formatted_msg.replace('\n', '\n' + ' ' * header_length)
-        return formatted_msg
+        return s
 
 class LogSetup:
     @staticmethod
