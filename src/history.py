@@ -1,9 +1,10 @@
+import logging
 import json
 
 class History:
     def __init__(self, file: str,):
         self.file_name = file
-        print("Loading script history data")
+        logging.info("Loading script history data")
 
         try:
             with open(file, "r") as file:
@@ -16,13 +17,13 @@ class History:
                 self.price = last_post['price']
                 self.rising = last_post['rising']
         except IOError:
-            print("Couldn't load file, using default values")
+            logging.warning("Couldn't load file, using default values")
             self.ema_reset = True
             self.price = None
             self.rising = True
 
     def save(self):
-        print(f"Updating {self.file_name}")
+        logging.info(f"Updating {self.file_name}")
 
         new_data = {
             'ema_reset': self.ema_reset,

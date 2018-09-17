@@ -2,14 +2,24 @@
   <dictionary name="User">
     <words>
       <w>argparse</w>
+      <w>asctime</w>
       <w>bitcoin</w>
       <w>coinbase</w>
       <w>cooldown</w>
       <w>cryptocorn</w>
+      <w>cryptocurrencies</w>
       <w>cryptocurrency</w>
+      <w>cust</w>
       <w>dbnavigator</w>
+      <w>dstd</w>
+      <w>ethereum</w>
+      <w>excepthook</w>
+      <w>exctype</w>
       <w>fromtimestamp</w>
+      <w>levelname</w>
+      <w>litecoin</w>
       <w>mins</w>
+      <w>msec</w>
       <w>perc</w>
       <w>pycache</w>
       <w>repost</w>
