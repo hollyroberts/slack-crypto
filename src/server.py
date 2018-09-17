@@ -110,7 +110,7 @@ class CommandHandler(BaseHTTPRequestHandler):
         if not(text == "h" or text == "help"):
             return False
 
-        return_msg = "The first 2 arguments can be optionally used to specify the cryptocurrency and fiat pair (1 or both can be omitted)\n" \
+        return_msg = "The first 2 arguments can be optionally used to specify the cryptocurrency and fiat pair (1 or both can be omitted, order doesn't matter)\n" \
                      "The remaining arguments are the number of days back you want to retrieve prices for (eg. /prices \"bitcoin cash\" 7 14 will retrieve the price 1 and 2 weeks ago for bitcoin cash). " \
                      "By default the price 7 and 28 days ago are fetched" \
                      "\n\nSupported cryptocurrencies: " + ', '.join(sorted(Currencies.CRYPTO_MAP.keys())) + \
