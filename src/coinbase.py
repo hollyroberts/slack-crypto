@@ -178,6 +178,6 @@ class Coinbase:
                 continue
             elif resp.status_code != 200:
                 logging.info("API error - Response code was not 200 or 429")
-                raise IOError("Code not 200")
+                raise IOError(f"Code not 200 (received {resp.status_code})")
             else:
                 return resp.text
