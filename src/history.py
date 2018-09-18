@@ -33,5 +33,7 @@ class History:
             }
         }
 
+        logging.debug("New data: \n" + json.dumps(new_data, indent=4))
+
         with open(self.file_name, "w") as f:
             json.dump(new_data, f, indent=4)

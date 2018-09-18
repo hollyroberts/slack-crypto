@@ -50,12 +50,13 @@ class Analysis:
         if not history.ema_reset:
             if history.rising:
                 target = history.price * (1 - reset_perc / 100)
-                should_reset = stats.ema > target
+                should_reset = stats.ema < target
             else:
                 target = history.price * (1 + reset_perc / 100)
-                should_reset = stats.ema < target
+                should_reset = stats.ema > target
 
             if should_reset:
+                logging.info("Resetting EMA")
                 history.ema_reset = True
                 history.save()
 
