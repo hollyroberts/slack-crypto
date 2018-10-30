@@ -90,7 +90,11 @@ class Coinbase:
             # logging.info(datetime.fromtimestamp(self.data[i]['time']).strftime("%d/%m/%Y - %H:%M"))
             time_diff = data[i]['time'] - data[i + 1]['time']
             # logging.info(time_diff)
-            assert time_diff == self.SECS_IN_MINUTE * self.MINS_IN_HOUR
+
+            required_diff = self.SECS_IN_MINUTE * self.MINS_IN_HOUR
+            if time_diff != required_diff:
+                logging.error(f"For index {i} the time diff is not {required_diff}, but is {time_diff}")
+            # assert time_diff == required_diff
 
         """ print information
         for entry in self.data:
