@@ -144,7 +144,7 @@ class Coinbase:
 
     """Get prices closest to the times given, but they cannot be later"""
     def get_prices_closest_to_time(self, *args: datetime):
-        earliest = min(args)
+        earliest = min(args) - timedelta(minutes=self.interval)
         latest = max(args)
 
         # Map response to ordered list of time -> price
