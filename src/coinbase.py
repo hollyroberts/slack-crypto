@@ -60,7 +60,7 @@ class Currency:
         self.pair = f"{crypto}-{fiat}"
 
 class Coinbase:
-    API_URL = "https://api.pro.coinbase.com"
+    API_URL = "https://api.exchange.coinbase.com"
     CANDLES_TO_RETRIEVE = 300
     MINS_IN_HOUR = 60
     SECS_IN_MINUTE = 60
